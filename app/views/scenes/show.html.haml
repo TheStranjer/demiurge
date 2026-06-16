@@ -32,11 +32,23 @@
             &middot;
             = event.directive
         - if event.roll_results.any?
-          %ul.event-rolls
+          .event-rolls
             - event.roll_results.includes(:roll_table).each do |result|
-              %li
-                = result.roll_table.description
-                = "→ rolled #{result.roll_result} (#{result.result})"
+              %details.roll-result
+                %summary
+                  %span.roll-result-table= result.roll_table.description
+                  %span.roll-result-outcome= "→ rolled #{result.roll_result} (#{result.result})"
+                %table.roll-table
+                  %thead
+                    %tr
+                      %th.roll-table-range Roll
+                      %th.roll-table-outcome Result
+                  %tbody
+                    - chosen = result.roll_table.row_for(result.roll_result)
+                    - result.roll_table.possible_results.each do |row|
+                      %tr{ class: ("roll-table-row-chosen" if row == chosen) }
+                        %td.roll-table-range= roll_range_label(row)
+                        %td.roll-table-outcome= row["result"]
         - if event.prose.present?
           .event-prose= simple_format(event.prose)
         - else

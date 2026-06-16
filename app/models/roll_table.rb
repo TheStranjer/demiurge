@@ -11,8 +11,12 @@ class RollTable < ApplicationRecord
 
   validate :possible_results_is_well_formed
 
+  def row_for(value)
+    possible_results.find { |row| within_bounds?(row, value) }
+  end
+
   def result_for(value)
-    entry = possible_results.find { |row| within_bounds?(row, value) }
+    entry = row_for(value)
     entry && entry["result"]
   end
 
