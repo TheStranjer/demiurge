@@ -44,11 +44,15 @@
         - if event.grok_calls.any?
           %details.event-grok-calls
             %summary= "Grok calls (#{event.grok_calls.count})"
-            - event.grok_calls.order(:created_at).each do |call|
+            - event.grok_calls.order(:created_at).each_with_index do |call, index|
               .grok-call
-                %p.grok-call-status= "HTTP #{call.status}"
+                %p.grok-call-header
+                  %span.grok-call-number= "Call ##{index + 1}"
+                  %span.grok-call-status= "HTTP #{call.status}"
+                %p.grok-call-label Request
                 %pre.grok-call-request= JSON.pretty_generate(call.payload)
                 - if call.response.present?
+                  %p.grok-call-label Response
                   %pre.grok-call-response= JSON.pretty_generate(call.response)
 - else
   %p.scene-events-empty No events yet.
