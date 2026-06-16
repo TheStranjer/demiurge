@@ -1,0 +1,18 @@
+- content_for :title, "Characters of #{@world.title}"
+
+%h1 Characters of #{@world.title}
+
+- if @characters.any?
+  %ul.character-list
+    - @characters.each do |character|
+      %li.character-list-item
+        = link_to character.name, [@world, character]
+        - if character.non_player_character
+          %span.muted (NPC)
+- else
+  %p.muted This world has no characters yet.
+
+%p.page-links
+  = link_to "New character", new_world_character_path(@world)
+  &middot;
+  = link_to "Back to world", @world

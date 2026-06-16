@@ -6,6 +6,8 @@
 %p.world-core-concept= simple_format(@world.core_concept)
 
 %p.page-links
+  = link_to "Characters", world_characters_path(@world)
+  &middot;
   = link_to "Edit", edit_world_path(@world)
   &middot;
   = link_to "Back to worlds", worlds_path

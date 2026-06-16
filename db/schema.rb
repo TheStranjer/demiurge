@@ -10,7 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_130000) do
+  create_table "characters", force: :cascade do |t|
+    t.integer "awareness", null: false
+    t.integer "charisma", null: false
+    t.datetime "created_at", null: false
+    t.integer "dexterity", null: false
+    t.integer "endurance", null: false
+    t.integer "finesse", null: false
+    t.integer "intelligence", null: false
+    t.string "name", null: false
+    t.boolean "non_player_character", default: false, null: false
+    t.string "sex", null: false
+    t.integer "strength", null: false
+    t.integer "tact", null: false
+    t.datetime "updated_at", null: false
+    t.integer "willpower", null: false
+    t.integer "world_id", null: false
+    t.index ["world_id"], name: "index_characters_on_world_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at", null: false
@@ -39,6 +58,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_120000) do
     t.index ["user_id"], name: "index_worlds_on_user_id"
   end
 
+  add_foreign_key "characters", "worlds"
   add_foreign_key "sessions", "users"
   add_foreign_key "worlds", "users"
 end

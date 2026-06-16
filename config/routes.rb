@@ -10,7 +10,9 @@ Rails.application.routes.draw do
   post "login", to: "sessions#create"
   delete "logout", to: "sessions#destroy", as: :logout
 
-  resources :worlds
+  resources :worlds do
+    resources :characters
+  end
 
   # Defines the root path route ("/")
   root "home#index"

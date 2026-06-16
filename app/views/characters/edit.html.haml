@@ -1,0 +1,8 @@
+- content_for :title, "Edit character"
+
+%h1 Edit character
+
+= render "form", world: @world, character: @character
+
+%p.page-links
+  = link_to "Back to character", [@world, @character]

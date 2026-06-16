@@ -1,0 +1,24 @@
+- content_for :title, @character.name
+
+%h1= @character.name
+
+%p.character-meta
+  = @character.sex.capitalize
+  &middot;
+  = @character.non_player_character ? "Non-player character" : "Player character"
+
+- Character::STAT_GROUPS.each do |group, stats|
+  %section.stat-group
+    %h2.field-label= group
+    %ul.stat-list
+      - stats.each do |stat|
+        %li.stat-list-item
+          %span.stat-name= stat.to_s.capitalize
+          %span.stat-value= @character.public_send(stat)
+
+%p.page-links
+  = link_to "Edit", edit_world_character_path(@world, @character)
+  &middot;
+  = link_to "Back to characters", world_characters_path(@world)
+  &middot;
+  = button_to "Delete", [@world, @character], method: :delete, form: { data: { turbo_confirm: "Delete this character?" } }

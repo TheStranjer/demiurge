@@ -1,0 +1,8 @@
+- content_for :title, "New character"
+
+%h1 New character
+
+= render "form", world: @world, character: @character
+
+%p.page-links
+  = link_to "Back to characters", world_characters_path(@world)

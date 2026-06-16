@@ -43,6 +43,11 @@ en:
     updated: "World updated."
     destroyed: "World deleted."
 
+  characters:
+    created: "Character created."
+    updated: "Character updated."
+    destroyed: "Character deleted."
+
   sessions:
     signed_in: "Signed in successfully."
     signed_out: "Signed out."

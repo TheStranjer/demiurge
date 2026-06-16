@@ -1,0 +1,30 @@
+= form_with model: [world, character] do |form|
+  - if character.errors.any?
+    .form-errors
+      = pluralize(character.errors.count, "error")
+      prevented this character from being saved:
+      %ul
+        - character.errors.full_messages.each do |message|
+          %li= message
+
+  .form-field
+    = form.label :name
+    = form.text_field :name, autofocus: true
+
+  .form-field
+    = form.label :sex
+    = form.select :sex, Character::SEXES.map { |sex| [sex.capitalize, sex] }, include_blank: true
+
+  .form-field.form-field-checkbox
+    = form.label :non_player_character
+    = form.check_box :non_player_character
+
+  - Character::STAT_GROUPS.each do |group, stats|
+    %fieldset.stat-group
+      %legend= group
+      - stats.each do |stat|
+        .form-field
+          = form.label stat
+          = form.number_field stat, in: -5..5, step: 1
+
+  = form.button "Save"
