@@ -69,9 +69,24 @@ jobs:
   rspec:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: demiurge
+          POSTGRES_PASSWORD: demiurge
+          POSTGRES_DB: demiurge
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips libpq-dev
 
       - name: Checkout code
         uses: actions/checkout@v6
@@ -84,6 +99,11 @@ jobs:
       - name: Run RSpec test suite
         env:
           RAILS_ENV: test
+          DEMIURGE_PG_HOST: localhost
+          DEMIURGE_PG_PORT: 5432
+          DEMIURGE_PG_USERNAME: demiurge
+          DEMIURGE_PG_PASSWORD: demiurge
+          DEMIURGE_PG_DATABASE: demiurge
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: |
