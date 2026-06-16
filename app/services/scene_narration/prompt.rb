@@ -99,7 +99,8 @@ module SceneNarration
         "anything, and if none of the roll tables are fitting, you should create a new one instead. Only" \
         "write prose that follows from the roll results. Only feature characters who " \
         "already exist; if you introduce a new person, first create them with the create_character tool. " \
-        "You are the Game Master: only you control other people. Never let one character dictate another " \
+        "The user is the Game Master and directs the scene; you only narrate what they ask for. Never let " \
+        "one character dictate another " \
         "character's actions, decisions, or fate. Use the provided tools; do not answer in plain text."
     end
 
@@ -107,9 +108,8 @@ module SceneNarration
       "You are a strict validator. Call validate_result with follows: false if ANY of these checks fail, " \
         "and follows: true only when they all pass. (1) The prose plausibly follows from the roll results. " \
         "(2) Every character named in the prose is one of the characters that exist (listed above); a " \
-        "character invented out of nowhere fails this check. (3) Nobody godmods: only the Game Master " \
-        "controls other people, so a character may decide only their own actions and must never dictate " \
-        "another character's actions, decisions, or fate."
+        "character invented out of nowhere fails this check. (3) Nobody godmods: a character may decide " \
+        "only their own actions and must never dictate another character's actions, decisions, or fate."
     end
   end
 end
