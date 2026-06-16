@@ -1,8 +1,97 @@
-# Omakase Ruby styling for Rails
-inherit_gem: { rubocop-rails-omakase: rubocop.yml }
-
-# Overwrite or add rules to create your own house style
+# Relatively strict RuboCop configuration.
 #
-# # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
-# Layout/SpaceInsideArrayLiteralBrackets:
-#   Enabled: false
+# Built on the official RuboCop defaults (intentionally stricter than the
+# rubocop-rails-omakase preset) plus the Rails, Performance, and RSpec plugins.
+# Newly released cops are opted-in by default; a handful of cops that fight
+# idiomatic Rails/RSpec code are relaxed below.
+
+plugins:
+  - rubocop-rails
+  - rubocop-performance
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 4.0
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - "bin/**/*"
+    - "db/**/*"
+    - "config/**/*"
+    - "vendor/**/*"
+    - "tmp/**/*"
+    - "log/**/*"
+    - "storage/**/*"
+    - "public/**/*"
+    - "node_modules/**/*"
+    - "Gemfile.lock"
+
+# --- Layout ----------------------------------------------------------------
+
+Layout/LineLength:
+  Max: 120
+
+# --- Style -----------------------------------------------------------------
+
+Style/Documentation:
+  # Requiring class/module docs on every file is noise in a Rails app.
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+  EnforcedStyle: always_true
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+
+# --- Metrics ---------------------------------------------------------------
+# Strict but workable ceilings. Specs and config DSLs are exempted where the
+# limits would otherwise penalize normal usage.
+
+Metrics/MethodLength:
+  Max: 15
+
+Metrics/AbcSize:
+  Max: 20
+
+Metrics/ClassLength:
+  Max: 150
+
+Metrics/ModuleLength:
+  Max: 150
+  Exclude:
+    - "spec/**/*"
+
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "Rakefile"
+    - "**/*.rake"
+
+# --- Rails -----------------------------------------------------------------
+
+Rails:
+  Enabled: true
+
+# --- RSpec -----------------------------------------------------------------
+
+RSpec/ExampleLength:
+  Max: 15
+
+RSpec/MultipleExpectations:
+  Max: 5
+
+RSpec/NestedGroups:
+  Max: 4
