@@ -16,6 +16,10 @@ class RollTable < ApplicationRecord
     entry && entry["result"]
   end
 
+  def roll
+    Array.new(quantity.to_i) { rand(1..denomination.to_i) }.sum
+  end
+
   def minimum_roll
     quantity.to_i
   end

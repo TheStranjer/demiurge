@@ -12,7 +12,9 @@ Rails.application.routes.draw do
 
   resources :worlds do
     resources :characters
-    resources :scenes
+    resources :scenes do
+      resources :events, only: %i[create]
+    end
   end
 
   # Defines the root path route ("/")

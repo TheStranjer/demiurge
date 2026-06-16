@@ -11,10 +11,11 @@ class GrokService
     new(...).call
   end
 
-  def initialize(grokable:, messages:, tools: [])
+  def initialize(grokable:, messages:, tools: [], tool_choice: nil)
     @grokable = grokable
     @messages = messages
     @tools = tools
+    @tool_choice = tool_choice
   end
 
   def call
@@ -27,11 +28,12 @@ class GrokService
 
   private
 
-  attr_reader :grokable, :messages, :tools
+  attr_reader :grokable, :messages, :tools, :tool_choice
 
   def build_payload
     payload = { model: MODEL, messages: messages }
     payload[:tools] = tools if tools.present?
+    payload[:tool_choice] = tool_choice if tool_choice.present?
     payload
   end
 

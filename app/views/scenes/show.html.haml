@@ -6,12 +6,63 @@
   = link_to @scene.character.name, [@world, @scene.character]
   &middot;
   = @scene.play_mode.capitalize
+  - if @scene.finished?
+    &middot;
+    %span.scene-finished Finished
 
 %h2.field-label Premise
 %p.scene-premise= simple_format(@scene.premise)
 
 %h2.field-label End trigger
 %p.scene-end-trigger= simple_format(@scene.end_trigger)
+
+%h2.field-label Events
+- if @scene.events.chronological.any?
+  %ol.scene-events
+    - @scene.events.chronological.each do |event|
+      %li.scene-event
+        %p.event-directive
+          %strong= event.action_type == "force_act" ? "Forced action" : "Narration"
+          - if event.directive.present?
+            &middot;
+            = event.directive
+        - if event.roll_results.any?
+          %ul.event-rolls
+            - event.roll_results.includes(:roll_table).each do |result|
+              %li
+                = result.roll_table.description
+                = "→ rolled #{result.roll_result} (#{result.result})"
+        - if event.prose.present?
+          .event-prose= simple_format(event.prose)
+        - else
+          %p.event-status= event.status.humanize
+        - if event.grok_calls.any?
+          %details.event-grok-calls
+            %summary= "Grok calls (#{event.grok_calls.count})"
+            - event.grok_calls.order(:created_at).each do |call|
+              .grok-call
+                %p.grok-call-status= "HTTP #{call.status}"
+                %pre.grok-call-request= JSON.pretty_generate(call.payload)
+                - if call.response.present?
+                  %pre.grok-call-response= JSON.pretty_generate(call.response)
+- else
+  %p.scene-events-empty No events yet.
+
+- if @scene.narrator_mode? && !@scene.finished?
+  %h2.field-label What happens next?
+  = form_with url: world_scene_events_path(@world, @scene), method: :post do
+    = hidden_field_tag "event[action_type]", "force_act"
+    .form-field
+      = label_tag "force_directive", "Optional guidance"
+      = text_area_tag "event[directive]", nil, rows: 2, id: "force_directive"
+    = submit_tag "Force #{@scene.character.name} to act"
+
+  = form_with url: world_scene_events_path(@world, @scene), method: :post do
+    = hidden_field_tag "event[action_type]", "narrate"
+    .form-field
+      = label_tag "narrate_directive", "State that something happens"
+      = text_area_tag "event[directive]", nil, rows: 2, id: "narrate_directive"
+    = submit_tag "Make it happen"
 
 %p.page-links
   = link_to "Edit", edit_world_scene_path(@world, @scene)

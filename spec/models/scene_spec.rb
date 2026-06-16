@@ -94,4 +94,38 @@ RSpec.describe Scene, type: :model do
       expect(scene).not_to be_valid
     end
   end
+
+  describe "#narrator_mode?" do
+    it "is true for narrator scenes" do
+      scene.play_mode = "narrator"
+      expect(scene).to be_narrator_mode
+    end
+
+    it "is false for player scenes" do
+      expect(scene).not_to be_narrator_mode
+    end
+  end
+
+  describe "#finish!" do
+    it "stamps finished_at" do
+      scene.save!
+      expect { scene.finish! }.to change(scene, :finished?).from(false).to(true)
+    end
+  end
+
+  describe "#present_characters" do
+    it "always includes the main character" do
+      scene.save!
+      expect(scene.present_characters).to eq([character])
+    end
+
+    it "includes arrived characters and excludes departed ones" do
+      scene.save!
+      arrival = world.characters.create!(character_attributes.merge(name: "Bram"))
+      gone = world.characters.create!(character_attributes.merge(name: "Zed"))
+      scene.scene_presences.create!(character: arrival)
+      scene.scene_presences.create!(character: gone, departed_at: Time.current)
+      expect(scene.present_characters).to contain_exactly(character, arrival)
+    end
+  end
 end

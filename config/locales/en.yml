@@ -53,6 +53,10 @@ en:
     updated: "Scene updated."
     destroyed: "Scene deleted."
 
+  events:
+    started: "The narrator is working on what happens next."
+    unavailable: "Events can only be created in an active narrator-mode scene."
+
   sessions:
     signed_in: "Signed in successfully."
     signed_out: "Signed out."

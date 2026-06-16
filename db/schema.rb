@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_160001) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_170002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -31,6 +31,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_160001) do
     t.integer "willpower", null: false
     t.integer "world_id", null: false
     t.index ["world_id"], name: "index_characters_on_world_id"
+  end
+
+  create_table "events", force: :cascade do |t|
+    t.string "action_type", null: false
+    t.integer "attempts", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.text "directive"
+    t.boolean "ended_scene", default: false, null: false
+    t.text "prose"
+    t.bigint "scene_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "validated"
+    t.index ["scene_id"], name: "index_events_on_scene_id"
   end
 
   create_table "grok_calls", force: :cascade do |t|
@@ -68,10 +82,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_160001) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "scene_presences", force: :cascade do |t|
+    t.bigint "character_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "departed_at"
+    t.bigint "scene_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["character_id"], name: "index_scene_presences_on_character_id"
+    t.index ["scene_id", "character_id"], name: "index_scene_presences_on_scene_id_and_character_id", unique: true
+    t.index ["scene_id"], name: "index_scene_presences_on_scene_id"
+  end
+
   create_table "scenes", force: :cascade do |t|
     t.bigint "character_id", null: false
     t.datetime "created_at", null: false
     t.text "end_trigger", null: false
+    t.datetime "finished_at"
     t.string "play_mode", null: false
     t.text "premise", null: false
     t.datetime "updated_at", null: false
@@ -111,7 +137,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_160001) do
   end
 
   add_foreign_key "characters", "worlds"
+  add_foreign_key "events", "scenes"
   add_foreign_key "roll_results", "roll_tables"
+  add_foreign_key "scene_presences", "characters"
+  add_foreign_key "scene_presences", "scenes"
   add_foreign_key "scenes", "characters"
   add_foreign_key "scenes", "users"
   add_foreign_key "scenes", "worlds"
