@@ -1,10 +1,143 @@
 /*
- * This is a manifest file that'll be compiled into application.css.
+ * Application styles. Plain CSS served by Propshaft (no preprocessing).
  *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
+ * Theme: near-black background, off-white text, gold links.
  */
+
+:root {
+  --color-background: #0a0a0a;
+  --color-text: #e8e6e0;
+  --color-muted: #9a978f;
+  --color-link: #d4af37;
+  --color-link-hover: #f0d066;
+  --color-surface: #161616;
+  --color-border: #2a2a2a;
+  --color-error: #ff6b6b;
+  --color-success: #7dd87d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+a:hover,
+a:focus {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+.container {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+h1 {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+/* --- Forms --------------------------------------------------------------- */
+
+.form-field {
+  margin-bottom: 1.25rem;
+}
+
+.form-field label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.form-field input[type="text"],
+.form-field input[type="password"] {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.form-field input:focus {
+  outline: none;
+  border-color: var(--color-link);
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  margin-top: 0.5rem;
+  background-color: var(--color-link);
+  color: #1a1500;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover {
+  background-color: var(--color-link-hover);
+}
+
+.recaptcha-field {
+  margin-bottom: 1.25rem;
+}
+
+/* --- Flash and errors ---------------------------------------------------- */
+
+.flash-message {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.flash-alert {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.flash-notice {
+  border-color: var(--color-link);
+  color: var(--color-link);
+}
+
+.form-errors {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-error);
+  border-radius: 6px;
+  color: var(--color-error);
+}
+
+.form-errors ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.page-links {
+  margin-top: 1.5rem;
+  color: var(--color-muted);
+}

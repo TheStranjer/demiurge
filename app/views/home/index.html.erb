@@ -1,0 +1,9 @@
+<% content_for :title, "Home" %>
+
+<h1>Welcome, <%= current_user.username %></h1>
+
+<p class="muted">You are signed in.</p>
+
+<p class="page-links">
+  <%= button_to "Sign out", logout_path, method: :delete %>
+</p>

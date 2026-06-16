@@ -29,3 +29,25 @@
 
 en:
   hello: "Hello world"
+
+  authentication:
+    require_login: "You must be logged in to access that page."
+    already_logged_in: "You are already logged in."
+
+  registrations:
+    welcome: "Welcome, %{username}! Your account has been created."
+    captcha_failed: "Please complete the CAPTCHA verification."
+
+  sessions:
+    signed_in: "Signed in successfully."
+    signed_out: "Signed out."
+    invalid_credentials: "Invalid username or password."
+    captcha_failed: "Please complete the CAPTCHA verification."
+
+  activerecord:
+    errors:
+      models:
+        user:
+          attributes:
+            username:
+              invalid_characters: "may only contain letters, numbers, and underscores"
