@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-# Session-key based authentication apparatus.
-#
-# A logged-in user is tracked solely through a +session_key+ stored in the
-# encrypted Rails +session+ cookie. The key is the random hex token of a
-# +Session+ record; everything else (the user, login state) is derived from it.
 module Authentication
   extend ActiveSupport::Concern
 

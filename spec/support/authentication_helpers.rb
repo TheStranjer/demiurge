@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# Request-spec helpers for establishing an authenticated session by going
-# through the real login endpoint (reCAPTCHA is auto-passed in the test env).
 module AuthenticationHelpers
   DEFAULT_PASSWORD = "password123"
 

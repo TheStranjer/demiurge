@@ -10,6 +10,9 @@ plugins:
   - rubocop-performance
   - rubocop-rspec
 
+require:
+  - ./lib/rubocop/cop/comments/no_comments.rb
+
 AllCops:
   TargetRubyVersion: 4.0
   NewCops: enable
@@ -30,6 +33,11 @@ AllCops:
 
 Layout/LineLength:
   Max: 120
+
+# --- Comments --------------------------------------------------------------
+
+Comments/NoComments:
+  Enabled: true
 
 # --- Style -----------------------------------------------------------------
 
