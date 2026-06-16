@@ -62,7 +62,7 @@ class SceneNarrator
     event.update!(status: "validating", prose: terminal.content, ended_scene: terminal.signal == :end_scene)
     return :unvalidated unless validated?(terminal.content)
 
-    scene.finish! if event.ended_scene
+    scene.finish!(summary: terminal.summary) if event.ended_scene
     event.update!(status: "complete")
     :complete
   end

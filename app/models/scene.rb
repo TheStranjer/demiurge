@@ -24,8 +24,15 @@ class Scene < ApplicationRecord
     finished_at.present?
   end
 
-  def finish!
-    update!(finished_at: Time.current) unless finished?
+  def finish!(summary: nil)
+    return if finished?
+
+    update!(finished_at: Time.current, summary: summary)
+  end
+
+  def previous_summaries
+    world.scenes.where.not(id: id).where.not(finished_at: nil)
+         .where.not(summary: [nil, ""]).order(:finished_at).pluck(:summary)
   end
 
   def present_characters

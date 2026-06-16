@@ -31,7 +31,16 @@ module SceneNarration
     attr_reader :scene
 
     def system_message
-      { role: "system", content: [world_block, characters_block, scene_block, tables_block, instructions].join("\n\n") }
+      blocks = [world_block, characters_block, previous_scenes_block, scene_block, tables_block, instructions]
+      { role: "system", content: blocks.compact.join("\n\n") }
+    end
+
+    def previous_scenes_block
+      summaries = scene.previous_summaries
+      return nil if summaries.empty?
+
+      lines = summaries.map { |summary| "- #{summary}" }
+      "Summaries of previous scenes:\n#{lines.join("\n")}"
     end
 
     def history_messages

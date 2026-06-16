@@ -2,7 +2,7 @@
 
 module SceneNarration
   class ToolRunner
-    Result = Struct.new(:signal, :content, keyword_init: true)
+    Result = Struct.new(:signal, :content, :summary, keyword_init: true)
 
     HANDLERS = %w[roll_tables create_roll_table create_character character_arrive character_depart
                   prose end_scene].freeze
@@ -27,7 +27,7 @@ module SceneNarration
     end
 
     def end_scene(arguments)
-      continue_with_prose(arguments, :end_scene)
+      Result.new(signal: :end_scene, content: arguments["text"].to_s, summary: arguments["summary"].to_s)
     end
 
     def roll_tables(arguments)

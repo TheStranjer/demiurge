@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_170002) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -100,6 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_170002) do
     t.datetime "finished_at"
     t.string "play_mode", null: false
     t.text "premise", null: false
+    t.text "summary"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.bigint "world_id", null: false

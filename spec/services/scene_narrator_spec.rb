@@ -87,7 +87,8 @@ RSpec.describe SceneNarrator do
 
   context "when the model ends the scene" do
     before do
-      end_message = message([tool_call("c2", "end_scene", { text: "The duel is over." })])
+      end_message = message([tool_call("c2", "end_scene",
+                                       { text: "The duel is over.", summary: "Kara wins the duel." })])
       stub_grok(roll_message, end_message, validation_message(follows: true))
     end
 
@@ -95,6 +96,11 @@ RSpec.describe SceneNarrator do
       narrate
       expect(event.scene.reload).to be_finished
       expect(event.reload.ended_scene).to be(true)
+    end
+
+    it "stores the model-written summary on the scene" do
+      narrate
+      expect(event.scene.reload.summary).to eq("Kara wins the duel.")
     end
   end
 

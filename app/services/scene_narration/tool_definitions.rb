@@ -73,8 +73,13 @@ module SceneNarration
     end
 
     def end_scene_tool
-      function("end_scene", "Describe what happens and end the scene. Must follow from the roll results.",
-               { text: { type: "string" } }, %w[text],)
+      function("end_scene", "Describe what happens and end the scene. Must follow from the roll results.", {
+                 text: { type: "string" },
+                 summary: {
+                   type: "string",
+                   description: "A concise summary of the whole scene for future narrative context.",
+                 },
+               }, %w[text summary],)
     end
 
     def character_properties
