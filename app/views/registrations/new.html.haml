@@ -1,0 +1,34 @@
+- content_for :title, "Register"
+
+%h1 Create an account
+
+= form_with model: @user, url: register_path, method: :post do |form|
+  - if @user.errors.any?
+    .form-errors
+      %strong
+        = pluralize(@user.errors.count, "error")
+        prevented your account from being created:
+      %ul
+        - @user.errors.full_messages.each do |message|
+          %li= message
+
+  .form-field
+    = form.label :username
+    = form.text_field :username, autocomplete: "username", autofocus: true
+
+  .form-field
+    = form.label :password
+    = form.password_field :password, autocomplete: "new-password"
+
+  .form-field
+    = form.label :password_confirmation, "Confirm password"
+    = form.password_field :password_confirmation, autocomplete: "new-password"
+
+  .recaptcha-field
+    = recaptcha_tags
+
+  = form.button "Register"
+
+%p.page-links
+  Already have an account?
+  = link_to "Sign in", login_path

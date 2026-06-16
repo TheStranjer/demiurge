@@ -1,0 +1,14 @@
+- content_for :title, "Worlds"
+
+%h1 Your Worlds
+
+- if @worlds.any?
+  %ul.world-list
+    - @worlds.each do |world|
+      %li.world-list-item
+        = link_to world.title, world
+- else
+  %p.muted You haven't created any worlds yet.
+
+%p.page-links
+  = link_to "New world", new_world_path

@@ -11,6 +11,8 @@ gem "sqlite3", ">= 2.1"
 gem "stimulus-rails"
 gem "turbo-rails"
 
+gem "haml-rails"
+
 gem "bcrypt", "~> 3.1.7"
 
 gem "recaptcha", "~> 5.19"

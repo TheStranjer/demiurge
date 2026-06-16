@@ -1,0 +1,21 @@
+- content_for :title, "Sign in"
+
+%h1 Sign in
+
+= form_with url: login_path, method: :post do |form|
+  .form-field
+    = form.label :username
+    = form.text_field :username, autocomplete: "username", autofocus: true
+
+  .form-field
+    = form.label :password
+    = form.password_field :password, autocomplete: "current-password"
+
+  .recaptcha-field
+    = recaptcha_tags
+
+  = form.button "Sign in"
+
+%p.page-links
+  Need an account?
+  = link_to "Register", register_path
