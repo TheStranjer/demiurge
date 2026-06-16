@@ -15,6 +15,7 @@ module SceneNarration
       [
         { role: "system", content: validation_instructions },
         { role: "user", content: roll_summary },
+        { role: "user", content: existing_characters_summary },
         { role: "user", content: "Prose to validate:\n#{prose}" },
       ]
     end
@@ -24,6 +25,13 @@ module SceneNarration
         "- #{result.roll_table.description} => rolled #{result.roll_result} (#{result.result})"
       end
       lines.any? ? "Roll results so far:\n#{lines.join("\n")}" : "No rolls have been made yet."
+    end
+
+    def existing_characters_summary
+      names = scene.world.characters.order(:id).pluck(:name)
+      return "No characters exist yet." if names.empty?
+
+      "The only characters that exist are:\n#{names.map { |name| "- #{name}" }.join("\n")}"
     end
 
     private
@@ -78,7 +86,7 @@ module SceneNarration
     end
 
     def scene_block
-      "Premise: #{scene.premise}\n\nEnd-scene trigger: #{scene.end_trigger}"
+      "Premise Of Current Scene: #{scene.premise}\n\nEnd-scene trigger: #{scene.end_trigger}"
     end
 
     def tables_block
@@ -88,13 +96,20 @@ module SceneNarration
 
     def instructions
       "You are the narrator of this scene. You must roll on at least one roll table before describing " \
-        "anything. Only write prose that follows from the roll results. Use the provided tools; do not " \
-        "answer in plain text."
+        "anything, and if none of the roll tables are fitting, you should create a new one instead. Only" \
+        "write prose that follows from the roll results. Only feature characters who " \
+        "already exist; if you introduce a new person, first create them with the create_character tool. " \
+        "You are the Game Master: only you control other people. Never let one character dictate another " \
+        "character's actions, decisions, or fate. Use the provided tools; do not answer in plain text."
     end
 
     def validation_instructions
-      "You are a strict validator. Given the roll results and the prose, decide whether the prose " \
-        "plausibly follows from the roll results. Call validate_result with your verdict."
+      "You are a strict validator. Call validate_result with follows: false if ANY of these checks fail, " \
+        "and follows: true only when they all pass. (1) The prose plausibly follows from the roll results. " \
+        "(2) Every character named in the prose is one of the characters that exist (listed above); a " \
+        "character invented out of nowhere fails this check. (3) Nobody godmods: only the Game Master " \
+        "controls other people, so a character may decide only their own actions and must never dictate " \
+        "another character's actions, decisions, or fate."
     end
   end
 end

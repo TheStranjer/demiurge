@@ -46,4 +46,31 @@ RSpec.describe SceneNarration::Prompt do
 
     expect(system_content).not_to include("Summaries of previous scenes")
   end
+
+  it "tells the narrator to create new people and never godmod" do
+    expect(system_content).to include("create_character")
+    expect(system_content).to include("Never let one character dictate")
+  end
+
+  describe "#validation_messages" do
+    def contents
+      prompt.validation_messages("Some prose.").map { |message| message.fetch(:content) }
+    end
+
+    it "lists the characters that actually exist for the validator" do
+      character
+      world.characters.create!(character_attributes(name: "Bram"))
+      expect(contents.join("\n\n")).to include("The only characters that exist are:\n- Kara\n- Bram")
+    end
+
+    it "instructs the validator to reject invented characters and godmodding" do
+      instructions = contents.first
+      expect(instructions).to include("character invented out of nowhere fails this check")
+      expect(instructions).to include("Nobody godmods")
+    end
+
+    it "includes the prose under review" do
+      expect(contents.last).to eq("Prose to validate:\nSome prose.")
+    end
+  end
 end

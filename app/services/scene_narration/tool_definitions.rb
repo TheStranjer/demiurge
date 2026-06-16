@@ -28,7 +28,9 @@ module SceneNarration
     end
 
     def validation_tools
-      [function("validate_result", "Return whether the prose follows from the roll results.",
+      [function("validate_result",
+                "Return whether the prose follows from the rolls, only features characters that exist, " \
+                "and is free of godmodding.",
                 { follows: { type: "boolean" } }, %w[follows],)]
     end
 
@@ -44,7 +46,7 @@ module SceneNarration
     end
 
     def create_roll_table_tool
-      function("create_roll_table", "Create a brand new roll table and immediately roll on it.", {
+      function("create_roll_table", "Create a brand new roll table and immediately roll on it. The roll table should always be applicable to more than just this specific scene/person; use some amount of abstraction. No table is for one person or situation.", {
                  description: { type: "string" },
                  denomination: { type: "integer" },
                  quantity: { type: "integer" },
