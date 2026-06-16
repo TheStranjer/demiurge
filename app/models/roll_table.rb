@@ -1,0 +1,54 @@
+# frozen_string_literal: true
+
+class RollTable < ApplicationRecord
+  RESULT_KEYS = %w[min max result].freeze
+
+  has_many :roll_results, dependent: :destroy
+
+  validates :denomination, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 1 }
+  validates :quantity, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 1 }
+  validates :description, presence: true
+
+  validate :possible_results_is_well_formed
+
+  def result_for(value)
+    entry = possible_results.find { |row| within_bounds?(row, value) }
+    entry && entry["result"]
+  end
+
+  def minimum_roll
+    quantity.to_i
+  end
+
+  def maximum_roll
+    quantity.to_i * denomination.to_i
+  end
+
+  private
+
+  def within_bounds?(row, value)
+    min = row["min"]
+    max = row["max"]
+    (min.nil? || value >= min) && (max.nil? || value <= max)
+  end
+
+  def possible_results_is_well_formed
+    unless possible_results.is_a?(Array) && possible_results.any?
+      errors.add(:possible_results, :blank)
+      return
+    end
+
+    return if possible_results.all? { |row| valid_result_row?(row) }
+
+    errors.add(:possible_results, :invalid)
+  end
+
+  def valid_result_row?(row)
+    return false unless row.is_a?(Hash)
+    return false unless (row.keys - RESULT_KEYS).empty?
+    return false unless row["min"].nil? || row["min"].is_a?(Integer)
+    return false unless row["max"].nil? || row["max"].is_a?(Integer)
+
+    row.key?("result")
+  end
+end

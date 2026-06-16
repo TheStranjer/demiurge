@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_160001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_150000) do
     t.integer "status"
     t.datetime "updated_at", null: false
     t.index ["grokable_type", "grokable_id"], name: "index_grok_calls_on_grokable"
+  end
+
+  create_table "roll_results", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "entity_defender_id"
+    t.string "entity_defender_type"
+    t.bigint "entity_id", null: false
+    t.string "entity_type", null: false
+    t.integer "roll_result", null: false
+    t.integer "roll_result_defender"
+    t.bigint "roll_table_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["entity_defender_type", "entity_defender_id"], name: "index_roll_results_on_entity_defender"
+    t.index ["entity_type", "entity_id"], name: "index_roll_results_on_entity"
+    t.index ["roll_table_id"], name: "index_roll_results_on_roll_table_id"
+  end
+
+  create_table "roll_tables", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "denomination", null: false
+    t.text "description", null: false
+    t.jsonb "possible_results", default: [], null: false
+    t.integer "quantity", default: 1, null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "scenes", force: :cascade do |t|
@@ -87,6 +111,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_150000) do
   end
 
   add_foreign_key "characters", "worlds"
+  add_foreign_key "roll_results", "roll_tables"
   add_foreign_key "scenes", "characters"
   add_foreign_key "scenes", "users"
   add_foreign_key "scenes", "worlds"
