@@ -5,17 +5,23 @@ require "rails_helper"
 RSpec.describe SceneNarrator do
   subject(:narrate) { described_class.call(event) }
 
+  let(:world) do
+    User.create!(username: "alice", password: "password123", password_confirmation: "password123")
+        .worlds.create!(title: "Aerth", core_concept: "A world of floating islands.")
+  end
+  let(:character) { world.characters.create!(character_attributes) }
+  let(:scene) do
+    world.scenes.create!(user: world.user, character: character, premise: "A duel begins.",
+                         end_trigger: "End when someone yields.", play_mode: "narrator",)
+  end
   let(:table) do
-    RollTable.create!(denomination: 6, quantity: 1, description: "Weather severity",
-                      possible_results: [{ "min" => nil, "max" => nil, "result" => "harsh" }],)
+    world.roll_tables.create!(denomination: 6, quantity: 1, description: "Strike severity",
+                              possible_results: [{ "min" => nil, "max" => nil, "result" => "glancing" }],)
   end
   let(:event) do
-    user = User.create!(username: "alice", password: "password123", password_confirmation: "password123")
-    world = user.worlds.create!(title: "Aerth", core_concept: "A world of floating islands.")
-    character = world.characters.create!(character_attributes)
-    scene = world.scenes.create!(user: user, character: character, premise: "A duel begins.",
-                                 end_trigger: "End when someone yields.", play_mode: "narrator",)
-    scene.events.create!(action_type: "narrate", directive: "A storm rolls in.")
+    scene.events.create!(intent: "Kara strikes at the bandit.", status: "rolled").tap do |created|
+      created.roll_results.create!(roll_table: table, roll_result: 4)
+    end
   end
 
   def character_attributes(name: "Kara")
@@ -39,42 +45,35 @@ RSpec.describe SceneNarrator do
     allow(GrokService).to receive(:call).and_return(*bodies)
   end
 
-  def roll_message
-    message([tool_call("c1", "roll_tables", { roll_table_ids: [table.id] })])
-  end
-
   def prose_message
-    message([tool_call("c2", "prose", { text: "Rain lashes the courtyard." })])
+    message([tool_call("c1", "prose", { text: "Kara's blade grazes the bandit's arm." })])
   end
 
   def validation_message(follows:, reason: "")
-    message([tool_call("c3", "validate_result", { follows: follows, reason: reason })])
+    message([tool_call("c2", "validate_result", { follows: follows, reason: reason })])
   end
 
-  context "when the prose follows from a roll" do
-    before { stub_grok(roll_message, prose_message, validation_message(follows: true)) }
+  context "when the prose passes validation" do
+    before { stub_grok(prose_message, validation_message(follows: true)) }
 
     it "returns complete" do
       expect(narrate).to eq(:complete)
     end
 
-    it "records the rolled result against the event" do
-      narrate
-      expect(event.roll_results.count).to eq(1)
-      expect(event.roll_results.first.roll_table).to eq(table)
-    end
-
     it "stores the prose and marks the event complete" do
       narrate
-      expect(event.reload).to have_attributes(prose: "Rain lashes the courtyard.", status: "complete",
-                                              validated: true, ended_scene: false,)
+      expect(event.reload).to have_attributes(prose: "Kara's blade grazes the bandit's arm.",
+                                              status: "complete", validated: true, ended_scene: false,)
+    end
+
+    it "keeps the rolls the Game Master already made" do
+      expect { narrate }.not_to change(event.roll_results, :count)
     end
   end
 
   context "when validation keeps failing" do
     before do
-      stub_grok(roll_message,
-                prose_message, validation_message(follows: false),
+      stub_grok(prose_message, validation_message(follows: false),
                 prose_message, validation_message(follows: false),
                 prose_message, validation_message(follows: false),)
     end
@@ -90,23 +89,9 @@ RSpec.describe SceneNarrator do
     end
   end
 
-  context "when validation fails once and then passes" do
-    before do
-      stub_grok(roll_message,
-                prose_message, validation_message(follows: false, reason: "Bram never existed."),
-                prose_message, validation_message(follows: true),)
-    end
-
-    it "loops back and completes" do
-      expect(narrate).to eq(:complete)
-      expect(event.reload.validated).to be(true)
-    end
-  end
-
   context "when validation reports a reason" do
     it "feeds that reason back into a later narration request" do
-      bodies = [roll_message,
-                prose_message, validation_message(follows: false, reason: "Bram never existed."),
+      bodies = [prose_message, validation_message(follows: false, reason: "Bram never existed."),
                 prose_message, validation_message(follows: true),]
       seen = []
       allow(GrokService).to receive(:call) do |**kwargs|
@@ -122,39 +107,27 @@ RSpec.describe SceneNarrator do
 
   context "when the model ends the scene" do
     before do
-      end_message = message([tool_call("c2", "end_scene",
+      end_message = message([tool_call("c1", "end_scene",
                                        { text: "The duel is over.", summary: "Kara wins the duel." })])
-      stub_grok(roll_message, end_message, validation_message(follows: true))
+      stub_grok(end_message, validation_message(follows: true))
     end
 
-    it "finishes the scene" do
+    it "finishes the scene and stores the summary" do
       narrate
       expect(event.scene.reload).to be_finished
       expect(event.reload.ended_scene).to be(true)
-    end
-
-    it "stores the model-written summary on the scene" do
-      narrate
-      expect(event.scene.reload.summary).to eq("Kara wins the duel.")
+      expect(event.scene.summary).to eq("Kara wins the duel.")
     end
   end
 
-  context "when no roll is produced first" do
-    before { stub_grok(message([tool_call("c1", "roll_tables", { roll_table_ids: [] })])) }
+  context "when no roll tables were used" do
+    let(:event) { scene.events.create!(intent: "Kara breathes.", status: "rolled") }
 
-    it "fails without proceeding to prose" do
-      expect(narrate).to eq(:failed)
-      expect(event.roll_results).to be_empty
-    end
-  end
+    before { stub_grok(prose_message, validation_message(follows: true)) }
 
-  context "when a character arrives" do
-    it "adds the character to the scene" do
-      newcomer = event.scene.world.characters.create!(character_attributes(name: "Bram"))
-      arrive_message = message([tool_call("c2", "character_arrive", { character_id: newcomer.id })])
-      stub_grok(roll_message, arrive_message, prose_message, validation_message(follows: true))
-      narrate
-      expect(event.scene.present_characters).to include(newcomer)
+    it "still narrates the automatic success" do
+      expect(narrate).to eq(:complete)
+      expect(event.reload.prose).to be_present
     end
   end
 end

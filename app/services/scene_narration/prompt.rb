@@ -7,8 +7,20 @@ module SceneNarration
       @scene = event.scene
     end
 
-    def base_messages
-      [system_message] + history_messages + [current_directive_message]
+    def intent_messages
+      [intent_system_message] + history_messages + [situation_message]
+    end
+
+    def narration_messages
+      [narration_system_message] + history_messages + [resolution_message]
+    end
+
+    def intent_validation_messages(intent)
+      [
+        { role: "system", content: intent_validation_instructions },
+        { role: "user", content: existing_characters_summary },
+        { role: "user", content: "The player declared this intent for #{scene.character.name}:\n#{intent}" },
+      ]
     end
 
     def validation_messages(prose)
@@ -21,9 +33,7 @@ module SceneNarration
     end
 
     def roll_summary
-      lines = @event.roll_results.includes(:roll_table).map do |result|
-        "- #{result.roll_table.description} => rolled #{result.roll_result} (#{result.result})"
-      end
+      lines = roll_lines
       lines.any? ? "Roll results so far:\n#{lines.join("\n")}" : "No rolls have been made yet."
     end
 
@@ -38,8 +48,13 @@ module SceneNarration
 
     attr_reader :scene
 
-    def system_message
-      blocks = [world_block, characters_block, previous_scenes_block, scene_block, tables_block, instructions]
+    def intent_system_message
+      blocks = [world_block, characters_block, previous_scenes_block, scene_block, tables_block, intent_instructions]
+      { role: "system", content: blocks.compact.join("\n\n") }
+    end
+
+    def narration_system_message
+      blocks = [world_block, characters_block, previous_scenes_block, scene_block, narration_instructions]
       { role: "system", content: blocks.compact.join("\n\n") }
     end
 
@@ -52,22 +67,47 @@ module SceneNarration
     end
 
     def history_messages
-      scene.events.chronological.where.not(id: @event.id).where(status: "complete").flat_map do |event|
-        messages = [{ role: "user", content: directive_text(event) }]
-        messages << { role: "assistant", content: event.prose } if event.prose.present?
-        messages
-      end
+      completed_events.flat_map { |event| history_for(event) }
     end
 
-    def current_directive_message
-      { role: "user", content: directive_text(@event) }
+    def completed_events
+      scene.events.chronological.where.not(id: @event.id).where(status: "complete")
     end
 
-    def directive_text(event)
-      if event.action_type == "force_act"
-        "Force the main character (#{scene.character.name}) to act. #{event.directive}".strip
-      else
-        "The following happens in the scene: #{event.directive}".strip
+    def history_for(event)
+      messages = []
+      messages << { role: "user", content: "Game Master: #{event.directive}" } if event.directive.present?
+      messages << { role: "assistant", content: "Intent: #{event.intent}" } if event.intent.present?
+      messages << { role: "assistant", content: event.prose } if event.prose.present?
+      messages
+    end
+
+    def situation_message
+      text = @event.directive.presence ||
+             "It is #{scene.character.name}'s turn. Decide what they try to do."
+      { role: "user", content: text }
+    end
+
+    def resolution_message
+      parts = ["#{scene.character.name}'s declared intent: #{@event.intent}", roll_outcome_block, narrate_directive]
+      { role: "user", content: parts.join("\n\n") }
+    end
+
+    def roll_outcome_block
+      lines = roll_lines
+      return "No roll tables were used, so the attempt simply succeeds." if lines.empty?
+
+      "The Game Master rolled the following:\n#{lines.join("\n")}"
+    end
+
+    def narrate_directive
+      "Narrate what actually happens, consistent with these results. Use the prose tool, or end_scene if the " \
+        "scene's end trigger is now met."
+    end
+
+    def roll_lines
+      @event.roll_results.includes(:roll_table).map do |result|
+        "- #{result.roll_table.description} => rolled #{result.roll_result} (#{result.result})"
       end
     end
 
@@ -90,20 +130,32 @@ module SceneNarration
     end
 
     def tables_block
-      tables = RollTable.order(:id).map { |table| "- ##{table.id}: #{table.description}" }
+      tables = scene.world.roll_tables.library.order(:id).map { |table| "- ##{table.id}: #{table.description}" }
       tables.any? ? "Available roll tables:\n#{tables.join("\n")}" : "No roll tables exist yet."
     end
 
-    def instructions
-      "You are the narrator of this scene. You must roll on at least one roll table before describing " \
-        "anything, and if none of the roll tables are fitting, you should create a new one instead. Each " \
-        "roll table may be rolled only once per action; once you have rolled on a table you cannot roll on " \
-        "it again. Only " \
-        "write prose that follows from the roll results. Only feature characters who " \
-        "already exist; if you introduce a new person, first create them with the create_character tool. " \
-        "The user is the Game Master and directs the scene; you only narrate what they ask for. Never let " \
-        "one character dictate another " \
-        "character's actions, decisions, or fate. Use the provided tools; do not answer in plain text."
+    def intent_instructions
+      "You are playing #{scene.character.name} in this scene. Decide what your character attempts to do this " \
+        "turn and call declare_intent. State only the intent — what they are trying to do — never the outcome; " \
+        "the Game Master, not you, decides how it resolves. You may suggest existing roll tables by id and/or " \
+        "propose new roll tables that would help adjudicate the attempt; roll tables should be reusable, not " \
+        "specific to one person or moment. Never declare another character's actions, decisions, or fate, and " \
+        "never assume your own attempt has already succeeded. Use the provided tool; do not answer in plain text."
+    end
+
+    def narration_instructions
+      "You are narrating the outcome of #{scene.character.name}'s attempt, using the roll results the Game " \
+        "Master produced. Describe what actually happens, consistent with those rolls — a poor roll means the " \
+        "attempt falters or fails. Only feature characters who already exist. Never dictate another character's " \
+        "actions, decisions, or fate. Use the prose tool, or end_scene when the scene's end trigger is " \
+        "satisfied; do not answer in plain text."
+    end
+
+    def intent_validation_instructions
+      "You are a strict validator checking a player's declared intent. Call validate_result with follows: false " \
+        "if the intent godmods — it dictates another character's actions, decisions, or fate, or asserts its own " \
+        "outcome as already succeeded instead of merely attempted. Otherwise call follows: true. When follows is " \
+        "false, the reason must explain exactly what is wrong so the player can restate it as a pure attempt."
     end
 
     def validation_instructions
@@ -113,7 +165,7 @@ module SceneNarration
         "character invented out of nowhere fails this check. (3) Nobody godmods: a character may decide " \
         "only their own actions and must never dictate another character's actions, decisions, or fate. " \
         "When follows is false, the reason must name the specific failing check and quote or describe the " \
-        "offending part of the prose so the narrator knows exactly what to fix."
+        "offending part of the prose so it can be fixed."
     end
   end
 end

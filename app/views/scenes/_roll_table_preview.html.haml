@@ -1,0 +1,10 @@
+%table.roll-table
+  %thead
+    %tr
+      %th.roll-table-range Roll
+      %th.roll-table-outcome Result
+  %tbody
+    - table.possible_results.each do |row|
+      %tr
+        %td.roll-table-range= roll_range_label(row)
+        %td.roll-table-outcome= row["result"]

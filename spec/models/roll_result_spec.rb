@@ -18,7 +18,7 @@ RSpec.describe RollResult, type: :model do
     )
   end
   let(:roll_table) do
-    RollTable.create!(
+    world.roll_tables.create!(
       denomination: 8,
       quantity: 1,
       description: "Contested seduction roll.",

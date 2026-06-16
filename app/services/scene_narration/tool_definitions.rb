@@ -12,27 +12,35 @@ module SceneNarration
       required: %w[min max result],
     }.freeze
 
+    NEW_TABLE = {
+      type: "object",
+      properties: {
+        description: { type: "string" },
+        denomination: { type: "integer" },
+        quantity: { type: "integer" },
+        possible_results: { type: "array", items: RESULT_ROW },
+      },
+      required: %w[description denomination quantity possible_results],
+    }.freeze
+
     def initialize(scene, event = nil)
       @scene = scene
       @event = event
     end
 
-    def roll_tools
-      [roll_tables_tool, create_roll_table_tool].compact
+    def intent_tools
+      [declare_intent_tool]
     end
 
-    def full_tools
-      tools = roll_tools + [prose_tool, create_character_tool]
-      tools << character_arrive_tool if absent_character_ids.any?
-      tools << character_depart_tool if present_character_ids.any?
-      tools + [end_scene_tool]
+    def narration_tools
+      [prose_tool, end_scene_tool]
     end
 
     def validation_tools
       [function("validate_result",
-                "Return whether the prose follows from the rolls, only features characters that exist, " \
-                "and is free of godmodding. When follows is false, reason must spell out exactly which " \
-                "check failed and what is wrong so the narrator can fix it.",
+                "Return whether the content is free of godmodding (one character may decide only their own " \
+                "actions and must never dictate another character's actions, decisions, or fate) and otherwise " \
+                "valid. When follows is false, reason must spell out exactly what is wrong so it can be fixed.",
                 { follows: { type: "boolean" },
                   reason: { type: "string",
                             description: "Why validation failed. Leave empty when follows is true.", }, },
@@ -43,48 +51,32 @@ module SceneNarration
 
     attr_reader :scene, :event
 
-    def roll_tables_tool
-      all_ids = RollTable.order(:id).pluck(:id)
-      available = all_ids - rolled_table_ids
-      return nil if all_ids.any? && available.empty?
-
-      item = available.any? ? { type: "integer", enum: available } : { type: "integer" }
-      function("roll_tables", "Roll on one or more existing roll tables by id. Each table may be rolled " \
-                              "only once per action; rolled tables are no longer offered.",
-               { roll_table_ids: { type: "array", items: item } }, %w[roll_table_ids],)
+    def declare_intent_tool
+      function("declare_intent",
+               "State what #{scene.character.name} is trying to do this turn. Declare only the intent — the " \
+               "attempt — and never its outcome; the Game Master decides how it resolves. Optionally suggest " \
+               "existing roll tables by id and/or propose brand new roll tables for the Game Master to use. " \
+               "Never dictate another character's actions, decisions, or fate.",
+               intent_properties, %w[intent],)
     end
 
-    def rolled_table_ids
-      event ? event.roll_results.pluck(:roll_table_id) : []
+    def intent_properties
+      ids = library_table_ids
+      item = ids.any? ? { type: "integer", enum: ids } : { type: "integer" }
+      {
+        intent: { type: "string" },
+        suggested_roll_table_ids: { type: "array", items: item },
+        new_tables: { type: "array", items: NEW_TABLE },
+      }
     end
 
-    def create_roll_table_tool
-      function("create_roll_table", "Create a brand new roll table and immediately roll on it. The roll table should always be applicable to more than just this specific scene/person; use some amount of abstraction. No table is for one person or situation.", {
-                 description: { type: "string" },
-                 denomination: { type: "integer" },
-                 quantity: { type: "integer" },
-                 possible_results: { type: "array", items: RESULT_ROW },
-               }, %w[description denomination quantity possible_results],)
+    def library_table_ids
+      scene.world.roll_tables.library.order(:id).pluck(:id)
     end
 
     def prose_tool
-      function("prose", "Describe to the player what happens. Must follow from the roll results.",
+      function("prose", "Describe what happens, consistent with the roll results.",
                { text: { type: "string" } }, %w[text],)
-    end
-
-    def create_character_tool
-      function("create_character", "Create a new character in the world.",
-               character_properties, %w[name sex non_player_character] + Character::STATS.map(&:to_s),)
-    end
-
-    def character_arrive_tool
-      function("character_arrive", "Bring a character into the scene.",
-               { character_id: { type: "integer", enum: absent_character_ids } }, %w[character_id],)
-    end
-
-    def character_depart_tool
-      function("character_depart", "Remove a character who has left the scene.",
-               { character_id: { type: "integer", enum: present_character_ids } }, %w[character_id],)
     end
 
     def end_scene_tool
@@ -95,23 +87,6 @@ module SceneNarration
                    description: "A concise summary of the whole scene for future narrative context.",
                  },
                }, %w[text summary],)
-    end
-
-    def character_properties
-      base = {
-        name: { type: "string" },
-        sex: { type: "string", enum: Character::SEXES },
-        non_player_character: { type: "boolean" },
-      }
-      base.merge(Character::STATS.index_with { { type: "integer", minimum: -5, maximum: 5 } })
-    end
-
-    def absent_character_ids
-      scene.world.characters.order(:id).pluck(:id) - present_character_ids
-    end
-
-    def present_character_ids
-      scene.present_characters.map(&:id)
     end
 
     def function(name, description, properties, required)

@@ -5,8 +5,13 @@ require "rails_helper"
 RSpec.describe RollTable, type: :model do
   subject(:roll_table) { described_class.new(valid_attributes) }
 
+  let(:world) do
+    User.create!(username: "alice", password: "password123", password_confirmation: "password123")
+        .worlds.create!(title: "Aerth", core_concept: "Floating islands.")
+  end
   let(:valid_attributes) do
     {
+      world: world,
       denomination: 6,
       quantity: 1,
       description: "Roll for hair color when generating a character.",
@@ -143,9 +148,27 @@ RSpec.describe RollTable, type: :model do
 
   it "destroys its roll results when destroyed" do
     roll_table.save!
-    world = User.create!(username: "alice", password: "password123", password_confirmation: "password123")
-                .worlds.create!(title: "Aerth", core_concept: "Floating islands.")
     roll_table.roll_results.create!(roll_result: 4, entity: world)
     expect { roll_table.destroy }.to change(RollResult, :count).by(-1)
+  end
+
+  it "requires a world" do
+    roll_table.world = nil
+    expect(roll_table).not_to be_valid
+  end
+
+  it "defaults to not being a suggestion" do
+    expect(described_class.new.suggestion).to be(false)
+  end
+
+  describe "scopes" do
+    it "separates library tables from suggestions" do
+      library = world.roll_tables.create!(valid_attributes.merge(suggestion: false))
+      suggestion = world.roll_tables.create!(valid_attributes.merge(suggestion: true))
+      expect(described_class.library).to include(library)
+      expect(described_class.library).not_to include(suggestion)
+      expect(described_class.suggestions).to include(suggestion)
+      expect(described_class.suggestions).not_to include(library)
+    end
   end
 end

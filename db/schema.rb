@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_222343) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -34,14 +34,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_180000) do
   end
 
   create_table "events", force: :cascade do |t|
-    t.string "action_type", null: false
     t.integer "attempts", default: 0, null: false
     t.datetime "created_at", null: false
     t.text "directive"
     t.boolean "ended_scene", default: false, null: false
+    t.text "intent"
     t.text "prose"
     t.bigint "scene_id", null: false
     t.string "status", default: "pending", null: false
+    t.integer "suggested_roll_table_ids", default: [], null: false, array: true
     t.datetime "updated_at", null: false
     t.boolean "validated"
     t.index ["scene_id"], name: "index_events_on_scene_id"
@@ -77,9 +78,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_180000) do
     t.datetime "created_at", null: false
     t.integer "denomination", null: false
     t.text "description", null: false
+    t.bigint "event_id"
     t.jsonb "possible_results", default: [], null: false
     t.integer "quantity", default: 1, null: false
+    t.boolean "suggestion", default: false, null: false
     t.datetime "updated_at", null: false
+    t.bigint "world_id", null: false
+    t.index ["event_id"], name: "index_roll_tables_on_event_id"
+    t.index ["world_id"], name: "index_roll_tables_on_world_id"
   end
 
   create_table "scene_presences", force: :cascade do |t|
@@ -140,6 +146,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_180000) do
   add_foreign_key "characters", "worlds"
   add_foreign_key "events", "scenes"
   add_foreign_key "roll_results", "roll_tables"
+  add_foreign_key "roll_tables", "events", on_delete: :nullify
+  add_foreign_key "roll_tables", "worlds"
   add_foreign_key "scene_presences", "characters"
   add_foreign_key "scene_presences", "scenes"
   add_foreign_key "scenes", "characters"

@@ -12,7 +12,7 @@ RSpec.describe SceneNarration::Prompt do
     world.scenes.create!(user: user, character: character, premise: "A duel begins.",
                          end_trigger: "End when someone yields.", play_mode: "narrator",)
   end
-  let(:event) { scene.events.create!(action_type: "narrate", directive: "A storm rolls in.") }
+  let(:event) { scene.events.create!(directive: "A storm rolls in.", intent: "Kara takes cover.", status: "rolled") }
 
   def character_attributes(name: "Kara")
     {
@@ -23,33 +23,74 @@ RSpec.describe SceneNarration::Prompt do
     }
   end
 
-  def system_content
-    prompt.base_messages.first.fetch(:content)
+  def intent_system_content
+    prompt.intent_messages.first.fetch(:content)
   end
 
-  it "omits the previous-scenes block when there are no finished scenes" do
-    expect(system_content).not_to include("Summaries of previous scenes")
+  def narration_system_content
+    prompt.narration_messages.first.fetch(:content)
   end
 
-  it "funnels summaries of previously finished scenes into the system prompt" do
-    world.scenes.create!(user: user, character: character, premise: "An earlier tale.",
-                         end_trigger: "It ends.", play_mode: "narrator",)
-         .finish!(summary: "Kara escaped the citadel.")
+  describe "#intent_messages" do
+    it "casts the model as the player and forbids godmodding" do
+      expect(intent_system_content).to include("You are playing Kara")
+      expect(intent_system_content).to include("never the outcome")
+      expect(intent_system_content).to include("another character's actions, decisions, or fate")
+    end
 
-    expect(system_content).to include("Summaries of previous scenes:\n- Kara escaped the citadel.")
+    it "lists the world's library tables with their ids" do
+      table = world.roll_tables.create!(denomination: 6, quantity: 1, description: "Storm severity",
+                                        possible_results: [{ "min" => nil, "max" => nil, "result" => "harsh" }],)
+      expect(intent_system_content).to include("##{table.id}: Storm severity")
+    end
+
+    it "uses the Game Master's guidance as the current situation" do
+      expect(prompt.intent_messages.last.fetch(:content)).to eq("A storm rolls in.")
+    end
   end
 
-  it "ignores finished scenes that lack a summary" do
-    world.scenes.create!(user: user, character: character, premise: "A quiet day.",
-                         end_trigger: "It ends.", play_mode: "narrator",)
-         .finish!
+  describe "#narration_messages" do
+    it "supplies the declared intent and asks for prose or end_scene" do
+      content = prompt.narration_messages.last.fetch(:content)
+      expect(content).to include("Kara takes cover.")
+      expect(content).to include("prose")
+    end
 
-    expect(system_content).not_to include("Summaries of previous scenes")
+    it "notes an automatic success when no tables were rolled" do
+      expect(prompt.narration_messages.last.fetch(:content)).to include("the attempt simply succeeds")
+    end
+
+    it "summarizes the rolls when tables were used" do
+      table = world.roll_tables.create!(denomination: 6, quantity: 1, description: "Storm severity",
+                                        possible_results: [{ "min" => nil, "max" => nil, "result" => "harsh" }],)
+      event.roll_results.create!(roll_table: table, roll_result: 5)
+      expect(prompt.narration_messages.last.fetch(:content)).to include("Storm severity => rolled 5 (harsh)")
+    end
   end
 
-  it "tells the narrator to create new people and never godmod" do
-    expect(system_content).to include("create_character")
-    expect(system_content).to include("Never let one character dictate")
+  describe "previous-scene summaries" do
+    it "omits the block when there are no finished scenes" do
+      expect(intent_system_content).not_to include("Summaries of previous scenes")
+    end
+
+    it "funnels finished-scene summaries into the system prompt" do
+      world.scenes.create!(user: user, character: character, premise: "An earlier tale.",
+                           end_trigger: "It ends.", play_mode: "narrator",)
+           .finish!(summary: "Kara escaped the citadel.")
+      expect(intent_system_content).to include("Summaries of previous scenes:\n- Kara escaped the citadel.")
+    end
+  end
+
+  describe "#intent_validation_messages" do
+    it "instructs the validator to reject godmodded intent" do
+      instructions = prompt.intent_validation_messages("Kara wins").first.fetch(:content)
+      expect(instructions).to include("godmods")
+      expect(instructions).to include("already succeeded")
+    end
+
+    it "includes the intent under review" do
+      expect(prompt.intent_validation_messages("Kara wins").last.fetch(:content)).to include("Kara wins")
+    end
   end
 
   describe "#validation_messages" do

@@ -25,7 +25,11 @@ class Scene < ApplicationRecord
   end
 
   def awaiting_event?
-    events.where.not(status: %w[complete failed]).exists?
+    events.exists?(status: %w[pending declaring rolled narrating validating])
+  end
+
+  def awaiting_gm_event
+    events.find_by(status: "awaiting_gm")
   end
 
   def finish!(summary: nil)

@@ -13,7 +13,9 @@ Rails.application.routes.draw do
   resources :worlds do
     resources :characters
     resources :scenes do
-      resources :events, only: %i[create]
+      resources :events, only: %i[create] do
+        post :adjudicate, on: :member
+      end
     end
   end
 

@@ -1,22 +1,32 @@
 # frozen_string_literal: true
 
-class NarrateSceneJob < ApplicationJob
+class AdvanceSceneJob < ApplicationJob
   queue_as :default
 
   MAX_ATTEMPTS = 8
+  INTENT_STATUSES = %w[pending declaring].freeze
+  TERMINAL_OUTCOMES = %i[complete awaiting_gm].freeze
 
   def perform(event)
-    return if event.complete?
+    return if event.complete? || event.awaiting_gm?
 
     event.update!(attempts: event.attempts + 1)
-    outcome = SceneNarrator.call(event)
-    reschedule(event) unless outcome == :complete
+    outcome = advance(event)
+    reschedule(event) unless TERMINAL_OUTCOMES.include?(outcome)
   rescue StandardError
     reschedule(event)
     raise
   end
 
   private
+
+  def advance(event)
+    if INTENT_STATUSES.include?(event.status)
+      SceneNarration::IntentDeclarer.call(event)
+    else
+      SceneNarrator.call(event)
+    end
+  end
 
   def reschedule(event)
     if event.attempts >= MAX_ATTEMPTS

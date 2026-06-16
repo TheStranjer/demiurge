@@ -19,18 +19,23 @@
 %h2.field-label Events
 - if @scene.awaiting_event?
   %p.scene-refresh{ data: { controller: "refresh", refresh_seconds_value: 10 } }
-    Waiting for the storyteller&hellip; refreshing in
+    Waiting for the player&hellip; refreshing in
     %span.scene-refresh-countdown{ data: { refresh_target: "countdown" } } 10
     seconds.
 - if @scene.events.chronological.any?
   %ol.scene-events
     - @scene.events.chronological.each do |event|
       %li.scene-event
-        %p.event-directive
-          %strong= event.action_type == "force_act" ? "Forced action" : "Narration"
-          - if event.directive.present?
+        - if event.directive.present?
+          %p.event-guidance
+            %strong Guidance
             &middot;
             = event.directive
+        - if event.intent.present?
+          %p.event-intent
+            %strong Intent
+            &middot;
+            = event.intent
         - if event.roll_results.any?
           .event-rolls
             - event.roll_results.includes(:roll_table).each do |result|
@@ -70,20 +75,15 @@
   %p.scene-events-empty No events yet.
 
 - if @scene.narrator_mode? && !@scene.finished?
-  %h2.field-label What happens next?
-  = form_with url: world_scene_events_path(@world, @scene), method: :post do
-    = hidden_field_tag "event[action_type]", "force_act"
-    .form-field
-      = label_tag "force_directive", "Optional guidance"
-      = text_area_tag "event[directive]", nil, rows: 2, id: "force_directive"
-    = submit_tag "Force #{@scene.character.name} to act"
-
-  = form_with url: world_scene_events_path(@world, @scene), method: :post do
-    = hidden_field_tag "event[action_type]", "narrate"
-    .form-field
-      = label_tag "narrate_directive", "State that something happens"
-      = text_area_tag "event[directive]", nil, rows: 2, id: "narrate_directive"
-    = submit_tag "Make it happen"
+  - if @scene.awaiting_gm_event
+    = render "scenes/adjudication"
+  - elsif !@scene.awaiting_event?
+    %h2.field-label Player turn
+    = form_with url: world_scene_events_path(@world, @scene), method: :post do
+      .form-field
+        = label_tag "event_directive", "Optional guidance for the player"
+        = text_area_tag "event[directive]", nil, rows: 2, id: "event_directive"
+      = submit_tag "Let #{@scene.character.name} act"
 
 %p.page-links
   = link_to "Edit", edit_world_scene_path(@world, @scene)

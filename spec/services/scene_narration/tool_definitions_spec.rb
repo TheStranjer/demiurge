@@ -5,10 +5,10 @@ require "rails_helper"
 RSpec.describe SceneNarration::ToolDefinitions do
   subject(:definitions) { described_class.new(scene) }
 
+  let(:user) { User.create!(username: "alice", password: "password123", password_confirmation: "password123") }
+  let(:world) { user.worlds.create!(title: "Aerth", core_concept: "A world of floating islands.") }
+  let(:character) { world.characters.create!(character_attributes) }
   let(:scene) do
-    user = User.create!(username: "alice", password: "password123", password_confirmation: "password123")
-    world = user.worlds.create!(title: "Aerth", core_concept: "A world of floating islands.")
-    character = world.characters.create!(character_attributes)
     world.scenes.create!(user: user, character: character, premise: "A premise.",
                          end_trigger: "An ending.", play_mode: "narrator",)
   end
@@ -25,7 +25,7 @@ RSpec.describe SceneNarration::ToolDefinitions do
   def empty_enums(tools)
     tools.flat_map do |tool|
       properties = tool.dig(:function, :parameters, :properties) || {}
-      properties.filter_map { |name, schema| name if schema[:enum] == [] }
+      properties.filter_map { |name, schema| name if schema.dig(:items, :enum) == [] || schema[:enum] == [] }
     end
   end
 
@@ -33,17 +33,29 @@ RSpec.describe SceneNarration::ToolDefinitions do
     tools.map { |tool| tool.dig(:function, :name) }
   end
 
+  it "offers only declare_intent during the intent phase" do
+    expect(tool_names(definitions.intent_tools)).to eq(%w[declare_intent])
+  end
+
+  it "offers only prose and end_scene during narration" do
+    expect(tool_names(definitions.narration_tools)).to contain_exactly("prose", "end_scene")
+  end
+
   it "never emits an empty enum, which Grok rejects with a 400" do
-    expect(empty_enums(definitions.full_tools)).to be_empty
+    world.roll_tables.create!(denomination: 6, quantity: 1, description: "A table",
+                              possible_results: [{ "min" => nil, "max" => nil, "result" => "x" }],)
+    expect(empty_enums(definitions.intent_tools)).to be_empty
   end
 
-  it "omits character_arrive when no one can arrive" do
-    expect(tool_names(definitions.full_tools)).not_to include("character_arrive")
+  it "lists the world's library tables as suggestable ids" do
+    table = world.roll_tables.create!(denomination: 6, quantity: 1, description: "A table",
+                                      possible_results: [{ "min" => nil, "max" => nil, "result" => "x" }],)
+    schema = definitions.intent_tools.first.dig(:function, :parameters, :properties, :suggested_roll_table_ids)
+    expect(schema.dig(:items, :enum)).to eq([table.id])
   end
 
-  it "offers character_arrive with candidates once an absent character exists" do
-    scene.world.characters.create!(character_attributes(name: "Bram"))
-    expect(tool_names(definitions.full_tools)).to include("character_arrive")
-    expect(empty_enums(definitions.full_tools)).to be_empty
+  it "falls back to a plain integer when the world has no library tables" do
+    schema = definitions.intent_tools.first.dig(:function, :parameters, :properties, :suggested_roll_table_ids)
+    expect(schema[:items]).to eq({ type: "integer" })
   end
 end

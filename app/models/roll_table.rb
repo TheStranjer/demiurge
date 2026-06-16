@@ -3,7 +3,12 @@
 class RollTable < ApplicationRecord
   RESULT_KEYS = %w[min max result].freeze
 
+  belongs_to :world
+  belongs_to :event, optional: true
   has_many :roll_results, dependent: :destroy
+
+  scope :suggestions, -> { where(suggestion: true) }
+  scope :library, -> { where(suggestion: false) }
 
   validates :denomination, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 1 }
   validates :quantity, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 1 }

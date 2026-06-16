@@ -1,0 +1,50 @@
+- event = @scene.awaiting_gm_event
+- suggested_tables = event.proposed_roll_tables.order(:id).to_a
+- existing_tables = @scene.world.roll_tables.library.order(:id).to_a
+- suggested_ids = event.suggested_roll_table_ids
+- index = 0
+
+.gm-adjudication{ data: { controller: "table-builder", "table-builder-next-index-value": suggested_tables.size + (existing_tables.size * 2) } }
+  %h2.field-label The player intends to
+  %p.event-intent= event.intent
+
+  = form_with url: adjudicate_world_scene_event_path(@world, @scene, event), method: :post do
+    %p.gm-instructions
+      Choose the roll tables that resolve this attempt. Edit any values you like. Leave everything unchecked to
+      let the intent automatically succeed.
+
+    %h3.field-label Suggested tables
+    - if suggested_tables.empty?
+      %p.scene-events-empty The player suggested no new tables.
+    - suggested_tables.each do |table|
+      = render "scenes/table_fields", index: index, table: table, origin: table, checked: true
+      - index += 1
+
+    %h3.field-label Existing tables
+    - if existing_tables.empty?
+      %p.scene-events-empty This world has no roll tables yet.
+    - existing_tables.each do |table|
+      - as_is_index = index
+      - fork_index = index + 1
+      - index += 2
+      .table-existing
+        .table-existing-head
+          = check_box_tag "tables[#{as_is_index}][include]", "1", suggested_ids.include?(table.id), class: "table-existing-include", id: "table_include_#{as_is_index}"
+          = label_tag "table_include_#{as_is_index}", table.description
+          = hidden_field_tag "tables[#{as_is_index}][source]", "existing"
+          = hidden_field_tag "tables[#{as_is_index}][roll_table_id]", table.id
+          %button.link{ type: "button", data: { action: "table-builder#customize" } } Customize
+          %details
+            %summary Details
+            = render "scenes/roll_table_preview", table: table
+        .table-fork{ hidden: true }
+          = render "scenes/table_fields", index: fork_index, table: table, origin: nil, checked: false
+
+    %h3.field-label New table
+    %div{ data: { "table-builder-target": "list" } }
+    %button.link{ type: "button", data: { action: "table-builder#addBlank" } } Add table from scratch
+    %template{ data: { "table-builder-target": "template" } }
+      = render "scenes/table_fields", index: "__INDEX__", table: nil, origin: nil, checked: true
+
+    .form-actions
+      = submit_tag "Resolve"

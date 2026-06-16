@@ -54,8 +54,10 @@ en:
     destroyed: "Scene deleted."
 
   events:
-    started: "The narrator is working on what happens next."
-    unavailable: "Events can only be created in an active narrator-mode scene."
+    started: "The player is deciding what to do next."
+    adjudicated: "Rolling the chosen tables and narrating the outcome."
+    invalid_tables: "Some roll tables were incomplete. Please give each table at least one result row."
+    unavailable: "That action isn't available for this scene right now."
 
   sessions:
     signed_in: "Signed in successfully."

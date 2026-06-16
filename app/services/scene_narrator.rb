@@ -3,7 +3,7 @@
 require "json"
 
 class SceneNarrator
-  MAX_TURNS = 12
+  MAX_TURNS = 6
   MAX_VALIDATION_ATTEMPTS = 3
 
   def self.call(...)
@@ -16,13 +16,10 @@ class SceneNarrator
     @tools = SceneNarration::ToolDefinitions.new(@scene, event)
     @prompt = SceneNarration::Prompt.new(event)
     @runner = SceneNarration::ToolRunner.new(event)
-    @messages = @prompt.base_messages
+    @messages = @prompt.narration_messages
   end
 
   def call
-    reset_event
-    return :failed unless forced_roll?
-
     narrate_until_valid
   end
 
@@ -30,24 +27,10 @@ class SceneNarrator
 
   attr_reader :event, :scene, :tools, :prompt, :runner, :messages
 
-  def reset_event
-    event.roll_results.destroy_all
-    event.update!(prose: nil, validated: nil)
-  end
-
-  def forced_roll?
-    event.update!(status: "rolling")
-    message = request(tools.roll_tools, tool_choice: "required")
-    return false if message.nil?
-
-    process_tool_calls(message)
-    event.roll_results.exists?
-  end
-
   def main_loop
     event.update!(status: "narrating")
     MAX_TURNS.times do
-      message = request(tools.full_tools)
+      message = request(tools.narration_tools, tool_choice: "required")
       return nil if message.nil?
 
       terminal = process_tool_calls(message)

@@ -121,15 +121,29 @@ RSpec.describe Scene, type: :model do
 
     it "is true while an event is still working" do
       scene.save!
-      scene.events.create!(action_type: "narrate", status: "narrating")
+      scene.events.create!(status: "narrating")
       expect(scene.awaiting_event?).to be(true)
     end
 
     it "is false once every event has completed or failed" do
       scene.save!
-      scene.events.create!(action_type: "narrate", status: "complete")
-      scene.events.create!(action_type: "narrate", status: "failed")
+      scene.events.create!(status: "complete")
+      scene.events.create!(status: "failed")
       expect(scene.awaiting_event?).to be(false)
+    end
+
+    it "is false while an event waits for the Game Master" do
+      scene.save!
+      scene.events.create!(status: "awaiting_gm")
+      expect(scene.awaiting_event?).to be(false)
+    end
+  end
+
+  describe "#awaiting_gm_event" do
+    it "returns the event waiting for adjudication" do
+      scene.save!
+      event = scene.events.create!(status: "awaiting_gm")
+      expect(scene.awaiting_gm_event).to eq(event)
     end
   end
 

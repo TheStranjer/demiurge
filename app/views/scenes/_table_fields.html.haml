@@ -1,0 +1,42 @@
+- checked = local_assigns.fetch(:checked, true)
+- origin = local_assigns[:origin]
+- rows = (table&.possible_results.presence || [{ "min" => nil, "max" => nil, "result" => "" }])
+.table-block{ data: { row_next: rows.size } }
+  .table-block-head
+    = check_box_tag "tables[#{index}][include]", "1", checked, class: "table-block-include"
+    = hidden_field_tag "tables[#{index}][source]", "draft"
+    - if origin
+      = hidden_field_tag "tables[#{index}][origin_suggestion_id]", origin.id
+    %button.link{ type: "button", data: { action: "table-builder#removeBlock" } } Remove table
+  .form-field
+    = label_tag "tables[#{index}][description]", "Description"
+    = text_field_tag "tables[#{index}][description]", table&.description
+  .form-field.table-dice
+    = label_tag "tables[#{index}][quantity]", "Dice"
+    = number_field_tag "tables[#{index}][quantity]", (table&.quantity || 1), min: 1
+    %span.table-dice-times ×
+    = label_tag "tables[#{index}][denomination]", "Sides"
+    = number_field_tag "tables[#{index}][denomination]", (table&.denomination || 6), min: 1
+  %table.roll-table
+    %thead
+      %tr
+        %th Min
+        %th Max
+        %th Result
+        %th
+    %tbody.result-rows
+      - rows.each_with_index do |row, j|
+        %tr.result-row
+          %td= number_field_tag "tables[#{index}][results][#{j}][min]", row["min"]
+          %td= number_field_tag "tables[#{index}][results][#{j}][max]", row["max"]
+          %td= text_field_tag "tables[#{index}][results][#{j}][result]", row["result"]
+          %td
+            %button.link{ type: "button", data: { action: "table-builder#removeRow" } } ✕
+  %template.row-template
+    %tr.result-row
+      %td= number_field_tag "tables[#{index}][results][__ROW__][min]", nil
+      %td= number_field_tag "tables[#{index}][results][__ROW__][max]", nil
+      %td= text_field_tag "tables[#{index}][results][__ROW__][result]", nil
+      %td
+        %button.link{ type: "button", data: { action: "table-builder#removeRow" } } ✕
+  %button.link{ type: "button", data: { action: "table-builder#addRow" } } Add row
