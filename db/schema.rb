@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -31,6 +31,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_130000) do
     t.integer "willpower", null: false
     t.integer "world_id", null: false
     t.index ["world_id"], name: "index_characters_on_world_id"
+  end
+
+  create_table "grok_calls", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "grokable_id", null: false
+    t.string "grokable_type", null: false
+    t.jsonb "payload", null: false
+    t.jsonb "response"
+    t.integer "status"
+    t.datetime "updated_at", null: false
+    t.index ["grokable_type", "grokable_id"], name: "index_grok_calls_on_grokable"
   end
 
   create_table "sessions", force: :cascade do |t|
