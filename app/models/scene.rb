@@ -24,6 +24,10 @@ class Scene < ApplicationRecord
     finished_at.present?
   end
 
+  def awaiting_event?
+    events.where.not(status: %w[complete failed]).exists?
+  end
+
   def finish!(summary: nil)
     return if finished?
 

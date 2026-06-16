@@ -17,6 +17,11 @@
 %p.scene-end-trigger= simple_format(@scene.end_trigger)
 
 %h2.field-label Events
+- if @scene.awaiting_event?
+  %p.scene-refresh{ data: { controller: "refresh", refresh_seconds_value: 10 } }
+    Waiting for the storyteller&hellip; refreshing in
+    %span.scene-refresh-countdown{ data: { refresh_target: "countdown" } } 10
+    seconds.
 - if @scene.events.chronological.any?
   %ol.scene-events
     - @scene.events.chronological.each do |event|

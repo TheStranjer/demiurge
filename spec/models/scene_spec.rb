@@ -113,6 +113,26 @@ RSpec.describe Scene, type: :model do
     end
   end
 
+  describe "#awaiting_event?" do
+    it "is false when there are no events" do
+      scene.save!
+      expect(scene.awaiting_event?).to be(false)
+    end
+
+    it "is true while an event is still working" do
+      scene.save!
+      scene.events.create!(action_type: "narrate", status: "narrating")
+      expect(scene.awaiting_event?).to be(true)
+    end
+
+    it "is false once every event has completed or failed" do
+      scene.save!
+      scene.events.create!(action_type: "narrate", status: "complete")
+      scene.events.create!(action_type: "narrate", status: "failed")
+      expect(scene.awaiting_event?).to be(false)
+    end
+  end
+
   describe "#present_characters" do
     it "always includes the main character" do
       scene.save!
