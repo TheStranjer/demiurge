@@ -69,7 +69,8 @@ h1 {
 }
 
 .form-field input[type="text"],
-.form-field input[type="password"] {
+.form-field input[type="password"],
+.form-field textarea {
   width: 100%;
   padding: 0.65rem 0.75rem;
   background-color: var(--color-surface);
@@ -77,9 +78,11 @@ h1 {
   border-radius: 6px;
   color: var(--color-text);
   font-size: 1rem;
+  font-family: inherit;
 }
 
-.form-field input:focus {
+.form-field input:focus,
+.form-field textarea:focus {
   outline: none;
   border-color: var(--color-link);
 }
@@ -140,4 +143,31 @@ button[type="submit"]:hover {
 .page-links {
   margin-top: 1.5rem;
   color: var(--color-muted);
+}
+
+/* --- Worlds -------------------------------------------------------------- */
+
+.world-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.world-list-item {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.field-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin-bottom: 0.25rem;
+}
+
+.world-core-concept {
+  margin-top: 0;
 }

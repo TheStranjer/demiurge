@@ -5,5 +5,9 @@
 <p class="muted">You are signed in.</p>
 
 <p class="page-links">
+  <%= link_to "Your worlds", worlds_path %>
+</p>
+
+<p class="page-links">
   <%= button_to "Sign out", logout_path, method: :delete %>
 </p>

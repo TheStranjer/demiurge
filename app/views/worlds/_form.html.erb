@@ -1,0 +1,24 @@
+<%= form_with model: world do |form| %>
+  <% if world.errors.any? %>
+    <div class="form-errors">
+      <%= pluralize(world.errors.count, "error") %> prevented this world from being saved:
+      <ul>
+        <% world.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-field">
+    <%= form.label :title %>
+    <%= form.text_field :title, autofocus: true %>
+  </div>
+
+  <div class="form-field">
+    <%= form.label :core_concept %>
+    <%= form.text_area :core_concept, rows: 6 %>
+  </div>
+
+  <%= form.button "Save" %>
+<% end %>

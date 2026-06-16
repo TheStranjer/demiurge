@@ -38,6 +38,11 @@ en:
     welcome: "Welcome, %{username}! Your account has been created."
     captcha_failed: "Please complete the CAPTCHA verification."
 
+  worlds:
+    created: "World created."
+    updated: "World updated."
+    destroyed: "World deleted."
+
   sessions:
     signed_in: "Signed in successfully."
     signed_out: "Signed out."

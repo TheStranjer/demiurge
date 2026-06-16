@@ -1,0 +1,19 @@
+<% content_for :title, "Worlds" %>
+
+<h1>Your Worlds</h1>
+
+<% if @worlds.any? %>
+  <ul class="world-list">
+    <% @worlds.each do |world| %>
+      <li class="world-list-item">
+        <%= link_to world.title, world %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="muted">You haven't created any worlds yet.</p>
+<% end %>
+
+<p class="page-links">
+  <%= link_to "New world", new_world_path %>
+</p>

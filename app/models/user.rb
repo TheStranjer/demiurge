@@ -4,6 +4,7 @@ class User < ApplicationRecord
   has_secure_password
 
   has_many :sessions, dependent: :destroy
+  has_many :worlds, dependent: :destroy
 
   normalizes :username, with: ->(value) { value.to_s.strip.downcase }
 

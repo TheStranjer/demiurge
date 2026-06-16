@@ -1,0 +1,14 @@
+<% content_for :title, @world.title %>
+
+<h1><%= @world.title %></h1>
+
+<h2 class="field-label">Core concept</h2>
+<p class="world-core-concept"><%= simple_format(@world.core_concept) %></p>
+
+<p class="page-links">
+  <%= link_to "Edit", edit_world_path(@world) %>
+  &middot;
+  <%= link_to "Back to worlds", worlds_path %>
+  &middot;
+  <%= button_to "Delete", @world, method: :delete, form: { data: { turbo_confirm: "Delete this world?" } } %>
+</p>
