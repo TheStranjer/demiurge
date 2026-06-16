@@ -14,6 +14,7 @@ class Character < ApplicationRecord
   STAT_NUMERICALITY = { only_integer: true, greater_than_or_equal_to: -5, less_than_or_equal_to: 5 }.freeze
 
   belongs_to :world
+  has_many :scenes, dependent: :destroy
 
   validates :name, presence: true, length: { maximum: 255 }
   validates :sex, inclusion: { in: SEXES }

@@ -1,0 +1,26 @@
+= form_with model: [world, scene] do |form|
+  - if scene.errors.any?
+    .form-errors
+      = pluralize(scene.errors.count, "error")
+      prevented this scene from being saved:
+      %ul
+        - scene.errors.full_messages.each do |message|
+          %li= message
+
+  .form-field
+    = form.label :character_id, "Character"
+    = form.collection_select :character_id, world.characters.order(:name), :id, :name, include_blank: true
+
+  .form-field
+    = form.label :premise
+    = form.text_area :premise, rows: 6, autofocus: true
+
+  .form-field
+    = form.label :end_trigger, "End trigger"
+    = form.text_area :end_trigger, rows: 4
+
+  .form-field
+    = form.label :play_mode, "Play mode"
+    = form.select :play_mode, Scene::PLAY_MODES.map { |mode| [mode.capitalize, mode] }, include_blank: true
+
+  = form.button "Save"

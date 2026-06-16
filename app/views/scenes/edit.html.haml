@@ -1,0 +1,8 @@
+- content_for :title, "Edit scene"
+
+%h1 Edit scene
+
+= render "form", world: @world, scene: @scene
+
+%p.page-links
+  = link_to "Back to scene", [@world, @scene]

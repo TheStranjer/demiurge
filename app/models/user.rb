@@ -5,6 +5,7 @@ class User < ApplicationRecord
 
   has_many :sessions, dependent: :destroy
   has_many :worlds, dependent: :destroy
+  has_many :scenes, dependent: :destroy
 
   normalizes :username, with: ->(value) { value.to_s.strip.downcase }
 

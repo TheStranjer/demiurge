@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -44,6 +44,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_140000) do
     t.index ["grokable_type", "grokable_id"], name: "index_grok_calls_on_grokable"
   end
 
+  create_table "scenes", force: :cascade do |t|
+    t.bigint "character_id", null: false
+    t.datetime "created_at", null: false
+    t.text "end_trigger", null: false
+    t.string "play_mode", null: false
+    t.text "premise", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.bigint "world_id", null: false
+    t.index ["character_id"], name: "index_scenes_on_character_id"
+    t.index ["user_id"], name: "index_scenes_on_user_id"
+    t.index ["world_id"], name: "index_scenes_on_world_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at", null: false
@@ -73,6 +87,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_140000) do
   end
 
   add_foreign_key "characters", "worlds"
+  add_foreign_key "scenes", "characters"
+  add_foreign_key "scenes", "users"
+  add_foreign_key "scenes", "worlds"
   add_foreign_key "sessions", "users"
   add_foreign_key "worlds", "users"
 end

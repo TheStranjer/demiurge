@@ -1,0 +1,21 @@
+- content_for :title, "Scene"
+
+%h1 Scene
+
+%p.scene-meta
+  = link_to @scene.character.name, [@world, @scene.character]
+  &middot;
+  = @scene.play_mode.capitalize
+
+%h2.field-label Premise
+%p.scene-premise= simple_format(@scene.premise)
+
+%h2.field-label End trigger
+%p.scene-end-trigger= simple_format(@scene.end_trigger)
+
+%p.page-links
+  = link_to "Edit", edit_world_scene_path(@world, @scene)
+  &middot;
+  = link_to "Back to scenes", world_scenes_path(@world)
+  &middot;
+  = button_to "Delete", [@world, @scene], method: :delete, form: { data: { turbo_confirm: "Delete this scene?" } }

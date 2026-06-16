@@ -48,6 +48,11 @@ en:
     updated: "Character updated."
     destroyed: "Character deleted."
 
+  scenes:
+    created: "Scene created."
+    updated: "Scene updated."
+    destroyed: "Scene deleted."
+
   sessions:
     signed_in: "Signed in successfully."
     signed_out: "Signed out."

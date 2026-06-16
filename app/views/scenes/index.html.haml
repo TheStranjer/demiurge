@@ -1,0 +1,17 @@
+- content_for :title, "Scenes of #{@world.title}"
+
+%h1 Scenes of #{@world.title}
+
+- if @scenes.any?
+  %ul.scene-list
+    - @scenes.each do |scene|
+      %li.scene-list-item
+        = link_to truncate(scene.premise, length: 80), [@world, scene]
+        %span.muted= "(#{scene.play_mode})"
+- else
+  %p.muted This world has no scenes yet.
+
+%p.page-links
+  = link_to "New scene", new_world_scene_path(@world)
+  &middot;
+  = link_to "Back to world", @world

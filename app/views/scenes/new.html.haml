@@ -1,0 +1,8 @@
+- content_for :title, "New scene"
+
+%h1 New scene
+
+= render "form", world: @world, scene: @scene
+
+%p.page-links
+  = link_to "Back to scenes", world_scenes_path(@world)
