@@ -96,7 +96,9 @@ module SceneNarration
 
     def instructions
       "You are the narrator of this scene. You must roll on at least one roll table before describing " \
-        "anything, and if none of the roll tables are fitting, you should create a new one instead. Only" \
+        "anything, and if none of the roll tables are fitting, you should create a new one instead. Each " \
+        "roll table may be rolled only once per action; once you have rolled on a table you cannot roll on " \
+        "it again. Only " \
         "write prose that follows from the roll results. Only feature characters who " \
         "already exist; if you introduce a new person, first create them with the create_character tool. " \
         "The user is the Game Master and directs the scene; you only narrate what they ask for. Never let " \
@@ -109,7 +111,9 @@ module SceneNarration
         "and follows: true only when they all pass. (1) The prose plausibly follows from the roll results. " \
         "(2) Every character named in the prose is one of the characters that exist (listed above); a " \
         "character invented out of nowhere fails this check. (3) Nobody godmods: a character may decide " \
-        "only their own actions and must never dictate another character's actions, decisions, or fate."
+        "only their own actions and must never dictate another character's actions, decisions, or fate. " \
+        "When follows is false, the reason must name the specific failing check and quote or describe the " \
+        "offending part of the prose so the narrator knows exactly what to fix."
     end
   end
 end

@@ -31,7 +31,7 @@ module SceneNarration
     end
 
     def roll_tables(arguments)
-      ids = Array(arguments["roll_table_ids"])
+      ids = Array(arguments["roll_table_ids"]) - event.roll_results.pluck(:roll_table_id)
       rolled = RollTable.where(id: ids).map { |table| record_roll(table) }
       Result.new(signal: :continue, content: rolled.to_json)
     end

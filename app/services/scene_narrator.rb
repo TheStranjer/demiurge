@@ -4,6 +4,7 @@ require "json"
 
 class SceneNarrator
   MAX_TURNS = 12
+  MAX_VALIDATION_ATTEMPTS = 3
 
   def self.call(...)
     new(...).call
@@ -12,7 +13,7 @@ class SceneNarrator
   def initialize(event)
     @event = event
     @scene = event.scene
-    @tools = SceneNarration::ToolDefinitions.new(@scene)
+    @tools = SceneNarration::ToolDefinitions.new(@scene, event)
     @prompt = SceneNarration::Prompt.new(event)
     @runner = SceneNarration::ToolRunner.new(event)
     @messages = @prompt.base_messages
@@ -22,10 +23,7 @@ class SceneNarrator
     reset_event
     return :failed unless forced_roll?
 
-    terminal = main_loop
-    return :failed if terminal.nil?
-
-    finalize(terminal)
+    narrate_until_valid
   end
 
   private
@@ -58,24 +56,48 @@ class SceneNarrator
     nil
   end
 
-  def finalize(terminal)
-    event.update!(status: "validating", prose: terminal.content, ended_scene: terminal.signal == :end_scene)
-    return :unvalidated unless validated?(terminal.content)
+  def narrate_until_valid
+    MAX_VALIDATION_ATTEMPTS.times do
+      terminal = main_loop
+      return :failed if terminal.nil?
 
+      event.update!(status: "validating", prose: terminal.content, ended_scene: terminal.signal == :end_scene)
+      reason = validation_failure(terminal.content)
+      return complete(terminal) if reason.nil?
+
+      feed_back_validation_failure(reason)
+    end
+    :unvalidated
+  end
+
+  def complete(terminal)
     scene.finish!(summary: terminal.summary) if event.ended_scene
     event.update!(status: "complete")
     :complete
   end
 
-  def validated?(prose)
+  def validation_failure(prose)
     body = GrokService.call(grokable: event, messages: prompt.validation_messages(prose),
                             tools: tools.validation_tools, tool_choice: "required",)
     call = first_tool_call(body)
-    return false if call.nil?
+    return "The validator did not return a result." if call.nil?
 
-    follows = parse_arguments(call.dig("function", "arguments"))["follows"]
-    event.update!(validated: follows == true)
-    follows == true
+    arguments = parse_arguments(call.dig("function", "arguments"))
+    follows = arguments["follows"] == true
+    event.update!(validated: follows)
+    return nil if follows
+
+    arguments["reason"].to_s.presence || "The prose failed validation."
+  end
+
+  def feed_back_validation_failure(reason)
+    messages << {
+      role: "user",
+      content: "A strict validator rejected your previous narration. Reason:\n#{reason}\n\n" \
+               "Narrate again with the tools, fixing this problem. The new prose must follow from the " \
+               "roll results, feature only characters who exist, and never dictate another character's " \
+               "actions, decisions, or fate.",
+    }
   end
 
   def request(call_tools, tool_choice: nil)

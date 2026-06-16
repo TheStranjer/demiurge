@@ -12,12 +12,13 @@ module SceneNarration
       required: %w[min max result],
     }.freeze
 
-    def initialize(scene)
+    def initialize(scene, event = nil)
       @scene = scene
+      @event = event
     end
 
     def roll_tools
-      [roll_tables_tool, create_roll_table_tool]
+      [roll_tables_tool, create_roll_table_tool].compact
     end
 
     def full_tools
@@ -30,19 +31,31 @@ module SceneNarration
     def validation_tools
       [function("validate_result",
                 "Return whether the prose follows from the rolls, only features characters that exist, " \
-                "and is free of godmodding.",
-                { follows: { type: "boolean" } }, %w[follows],)]
+                "and is free of godmodding. When follows is false, reason must spell out exactly which " \
+                "check failed and what is wrong so the narrator can fix it.",
+                { follows: { type: "boolean" },
+                  reason: { type: "string",
+                            description: "Why validation failed. Leave empty when follows is true.", }, },
+                %w[follows reason],)]
     end
 
     private
 
-    attr_reader :scene
+    attr_reader :scene, :event
 
     def roll_tables_tool
-      ids = RollTable.order(:id).pluck(:id)
-      item = ids.any? ? { type: "integer", enum: ids } : { type: "integer" }
-      function("roll_tables", "Roll on one or more existing roll tables by id.",
+      all_ids = RollTable.order(:id).pluck(:id)
+      available = all_ids - rolled_table_ids
+      return nil if all_ids.any? && available.empty?
+
+      item = available.any? ? { type: "integer", enum: available } : { type: "integer" }
+      function("roll_tables", "Roll on one or more existing roll tables by id. Each table may be rolled " \
+                              "only once per action; rolled tables are no longer offered.",
                { roll_table_ids: { type: "array", items: item } }, %w[roll_table_ids],)
+    end
+
+    def rolled_table_ids
+      event ? event.roll_results.pluck(:roll_table_id) : []
     end
 
     def create_roll_table_tool

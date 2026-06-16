@@ -47,8 +47,8 @@ RSpec.describe SceneNarrator do
     message([tool_call("c2", "prose", { text: "Rain lashes the courtyard." })])
   end
 
-  def validation_message(follows:)
-    message([tool_call("c3", "validate_result", { follows: follows })])
+  def validation_message(follows:, reason: "")
+    message([tool_call("c3", "validate_result", { follows: follows, reason: reason })])
   end
 
   context "when the prose follows from a roll" do
@@ -71,10 +71,15 @@ RSpec.describe SceneNarrator do
     end
   end
 
-  context "when validation fails" do
-    before { stub_grok(roll_message, prose_message, validation_message(follows: false)) }
+  context "when validation keeps failing" do
+    before do
+      stub_grok(roll_message,
+                prose_message, validation_message(follows: false),
+                prose_message, validation_message(follows: false),
+                prose_message, validation_message(follows: false),)
+    end
 
-    it "returns unvalidated" do
+    it "returns unvalidated after exhausting the retries" do
       expect(narrate).to eq(:unvalidated)
     end
 
@@ -82,6 +87,36 @@ RSpec.describe SceneNarrator do
       narrate
       expect(event.reload.validated).to be(false)
       expect(event.reload).not_to be_complete
+    end
+  end
+
+  context "when validation fails once and then passes" do
+    before do
+      stub_grok(roll_message,
+                prose_message, validation_message(follows: false, reason: "Bram never existed."),
+                prose_message, validation_message(follows: true),)
+    end
+
+    it "loops back and completes" do
+      expect(narrate).to eq(:complete)
+      expect(event.reload.validated).to be(true)
+    end
+  end
+
+  context "when validation reports a reason" do
+    it "feeds that reason back into a later narration request" do
+      bodies = [roll_message,
+                prose_message, validation_message(follows: false, reason: "Bram never existed."),
+                prose_message, validation_message(follows: true),]
+      seen = []
+      allow(GrokService).to receive(:call) do |**kwargs|
+        seen << kwargs[:messages]
+        bodies.shift
+      end
+
+      narrate
+
+      expect(seen.flatten).to include(a_hash_including(content: a_string_including("Bram never existed.")))
     end
   end
 
