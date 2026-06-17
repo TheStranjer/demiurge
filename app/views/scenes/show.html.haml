@@ -33,10 +33,9 @@
               &middot;
               = event.directive
           - if event.intent.present?
-            %p.event-intent
-              %strong Intent
-              &middot;
-              = event.intent
+            %details.event-intent
+              %summary Intent
+              %p.event-intent-body= event.intent
           - if event.roll_results.any?
             .event-rolls
               - event.roll_results.includes(:roll_table).each do |result|

@@ -258,6 +258,21 @@ button[type="submit"]:hover {
   font-weight: 600;
 }
 
+/* --- Intent -------------------------------------------------------------- */
+
+.event-intent {
+  margin-top: 0.75rem;
+}
+
+.event-intent > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.event-intent-body {
+  margin: 0.5rem 0 0;
+}
+
 /* --- Grok calls ---------------------------------------------------------- */
 
 .event-grok-calls {
