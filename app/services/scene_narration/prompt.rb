@@ -77,8 +77,7 @@ module SceneNarration
     def history_for(event)
       messages = []
       messages << { role: "user", content: "Game Master: #{event.directive}" } if event.directive.present?
-      messages << { role: "assistant", content: "Intent: #{event.intent}" } if event.intent.present?
-      messages << { role: "assistant", content: event.prose } if event.prose.present?
+      messages << { role: "user", content: event.prose } if event.prose.present?
       messages
     end
 
@@ -131,17 +130,30 @@ module SceneNarration
 
     def tables_block
       tables = scene.world.roll_tables.library.order(:id).map { |table| "- ##{table.id}: #{table.description}" }
-      tables.any? ? "Available roll tables:\n#{tables.join("\n")}" : "No roll tables exist yet."
+      return "Available roll tables:\n#{tables.join("\n")}" if tables.any?
+
+      "No roll tables exist yet, so propose one in new_tables. A table rolls `quantity` dice of `denomination` " \
+        "sides and sums them; each row's min and max bound a slice of that total — set either to null to leave " \
+        "that end open, or make them equal to single out one total. new_tables takes an array of objects shaped " \
+        "like this well-formed example:\n#{ExampleTable::TEXT}"
     end
 
     def intent_instructions
       "You are playing #{scene.character.name} in this scene. Decide what your character attempts to do this " \
-        "turn and call declare_intent. State only the intent/goal — what they are trying to accomplish (trying to " \
-        "persuade someone, trying to figure out a puzzle, etc) — never the outcome; the Game Master, not you, " \
-        "decides how it resolves. You may suggest existing roll tables by id and/or propose new roll tables that " \
-        "would help adjudicate the attempt; roll tables should be reusable, not specific to one person or moment. " \
-        "Never declare another character's actions, decisions, or fate, and never assume your own attempt has" \
-        "already succeeded. Use the provided tool; do not answer in plain text."
+        "turn and call declare_intent. Your character is always reaching for something — they act in order to change " \
+        "their situation, so every intent has two parts and you must give both: the action — what your character " \
+        "concretely does or says — and the goal — the effect they are trying to produce by doing it. Do not stop " \
+        "at what they say; state what they want it to make happen: not 'I tell the guard the bridge is out' but " \
+        "'I try to turn the guard back by warning them the bridge is out.' Name the outcome they pursue — " \
+        "persuading someone, prying loose a secret, intimidating a rival, solving a puzzle — but state it as the " \
+        "attempt, never the outcome, and never as something that has already happened; the Game Master, not you, " \
+        "decides whether and how it resolves. Because the outcome is uncertain, by default give the Game Master " \
+        "something to roll: suggest existing roll tables by id and/or propose new ones to adjudicate the attempt, " \
+        "reaching for an existing table first and proposing a new one only when none fits. Roll tables should be " \
+        "reusable, not specific to one person or moment. Skip this only for a pure dialogue beat with no real " \
+        "chance of failure where the outcome doesn't matter. Never declare another character's actions, decisions, " \
+        "or fate, and never assume your own attempt has already succeeded. Use the provided tool; do not answer " \
+        "in plain text."
     end
 
     def narration_instructions

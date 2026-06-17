@@ -47,6 +47,31 @@ RSpec.describe SceneNarration::Prompt do
     it "uses the Game Master's guidance as the current situation" do
       expect(prompt.intent_messages.last.fetch(:content)).to eq("A storm rolls in.")
     end
+
+    it "shows a worked example table when the world has no library tables yet" do
+      expect(intent_system_content).to include("Degree of success on an uncertain attempt")
+      expect(intent_system_content).to include("\"denomination\": 6")
+      expect(intent_system_content).to include("\"max\": null")
+    end
+  end
+
+  describe "scene history" do
+    before do
+      scene.events.create!(directive: "Set the stage.", intent: "Kara lunges.",
+                           prose: "Kara lunges across the dueling floor.", status: "complete",)
+    end
+
+    it "feeds prior prose to the player without ever speaking in the assistant role" do
+      roles = prompt.intent_messages.map { |message| message.fetch(:role) }
+      contents = prompt.intent_messages.map { |message| message.fetch(:content) }.join("\n")
+      expect(roles).not_to include("assistant")
+      expect(contents).to include("Kara lunges across the dueling floor.")
+    end
+
+    it "never replays the player's declared intent back to them" do
+      contents = prompt.intent_messages.map { |message| message.fetch(:content) }.join("\n")
+      expect(contents).not_to include("Intent: Kara lunges.")
+    end
   end
 
   describe "#narration_messages" do
