@@ -136,11 +136,12 @@ module SceneNarration
 
     def intent_instructions
       "You are playing #{scene.character.name} in this scene. Decide what your character attempts to do this " \
-        "turn and call declare_intent. State only the intent — what they are trying to do — never the outcome; " \
-        "the Game Master, not you, decides how it resolves. You may suggest existing roll tables by id and/or " \
-        "propose new roll tables that would help adjudicate the attempt; roll tables should be reusable, not " \
-        "specific to one person or moment. Never declare another character's actions, decisions, or fate, and " \
-        "never assume your own attempt has already succeeded. Use the provided tool; do not answer in plain text."
+        "turn and call declare_intent. State only the intent/goal — what they are trying to accomplish (trying to " \
+        "persuade someone, trying to figure out a puzzle, etc) — never the outcome; the Game Master, not you, " \
+        "decides how it resolves. You may suggest existing roll tables by id and/or propose new roll tables that " \
+        "would help adjudicate the attempt; roll tables should be reusable, not specific to one person or moment. " \
+        "Never declare another character's actions, decisions, or fate, and never assume your own attempt has" \
+        "already succeeded. Use the provided tool; do not answer in plain text."
     end
 
     def narration_instructions
