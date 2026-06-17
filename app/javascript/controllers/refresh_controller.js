@@ -1,20 +1,30 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Counts down from `seconds` to zero, updating the countdown target each
-// second, then reloads the scene so a pending event's latest status shows.
-// The cycle repeats after each reload until nothing is pending.
+// Periodically pulls the scene's latest state over AJAX and swaps just the
+// live region into the DOM — no full-page reload. While an event is pending
+// the server renders a countdown; the controller fetches the scene, replaces
+// this element's contents with the fresh live region, and keeps polling. Once
+// nothing is pending the countdown is gone, so polling stops on its own.
 export default class extends Controller {
-  static targets = ["countdown"]
   static values = { seconds: { type: Number, default: 10 } }
 
   connect() {
-    this.remaining = this.secondsValue
-    this.render()
-    this.timer = setInterval(() => this.tick(), 1000)
+    this.start()
   }
 
   disconnect() {
     this.clear()
+  }
+
+  // Begin a countdown only while the server says we are still waiting, which
+  // it signals by rendering the countdown element inside the live region.
+  start() {
+    this.countdown = this.element.querySelector(".scene-refresh-countdown")
+    if (!this.countdown) return
+
+    this.remaining = this.secondsValue
+    this.render()
+    this.timer = setInterval(() => this.tick(), 1000)
   }
 
   tick() {
@@ -22,7 +32,7 @@ export default class extends Controller {
 
     if (this.remaining <= 0) {
       this.clear()
-      this.reload()
+      this.refresh()
       return
     }
 
@@ -30,16 +40,27 @@ export default class extends Controller {
   }
 
   render() {
-    if (this.hasCountdownTarget) {
-      this.countdownTarget.textContent = this.remaining
+    if (this.countdown) {
+      this.countdown.textContent = this.remaining
     }
   }
 
-  reload() {
-    if (window.Turbo) {
-      window.Turbo.visit(window.location.href, { action: "replace" })
-    } else {
-      window.location.reload()
+  async refresh() {
+    try {
+      const response = await fetch(window.location.href, {
+        headers: { Accept: "text/html", "X-Requested-With": "XMLHttpRequest" }
+      })
+
+      if (response.ok) {
+        const html = await response.text()
+        const doc = new DOMParser().parseFromString(html, "text/html")
+        const fresh = doc.getElementById(this.element.id)
+        if (fresh) {
+          this.element.innerHTML = fresh.innerHTML
+        }
+      }
+    } finally {
+      this.start()
     }
   }
 

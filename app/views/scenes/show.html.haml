@@ -16,74 +16,75 @@
 %h2.field-label End trigger
 %p.scene-end-trigger= simple_format(@scene.end_trigger)
 
-%h2.field-label Events
-- if @scene.awaiting_event?
-  %p.scene-refresh{ data: { controller: "refresh", refresh_seconds_value: 10 } }
-    Waiting for the player&hellip; refreshing in
-    %span.scene-refresh-countdown{ data: { refresh_target: "countdown" } } 10
-    seconds.
-- if @scene.events.chronological.any?
-  %ol.scene-events
-    - @scene.events.chronological.each do |event|
-      %li.scene-event
-        - if event.directive.present?
-          %p.event-guidance
-            %strong Guidance
-            &middot;
-            = event.directive
-        - if event.intent.present?
-          %p.event-intent
-            %strong Intent
-            &middot;
-            = event.intent
-        - if event.roll_results.any?
-          .event-rolls
-            - event.roll_results.includes(:roll_table).each do |result|
-              %details.roll-result
-                %summary
-                  %span.roll-result-table= result.roll_table.description
-                  %span.roll-result-outcome= "→ rolled #{result.roll_result} (#{result.result})"
-                %table.roll-table
-                  %thead
-                    %tr
-                      %th.roll-table-range Roll
-                      %th.roll-table-outcome Result
-                  %tbody
-                    - chosen = result.roll_table.row_for(result.roll_result)
-                    - result.roll_table.possible_results.each do |row|
-                      %tr{ class: ("roll-table-row-chosen" if row == chosen) }
-                        %td.roll-table-range= roll_range_label(row)
-                        %td.roll-table-outcome= row["result"]
-        - if event.prose.present?
-          .event-prose= simple_format(event.prose)
-        - else
-          %p.event-status= event.status.humanize
-        - if event.grok_calls.any?
-          %details.event-grok-calls
-            %summary= "Grok calls (#{event.grok_calls.count})"
-            - event.grok_calls.order(:created_at).each_with_index do |call, index|
-              .grok-call
-                %p.grok-call-header
-                  %span.grok-call-number= "Call ##{index + 1}"
-                  %span.grok-call-status= "HTTP #{call.status}"
-                %p.grok-call-label Request
-                %pre.grok-call-request= JSON.pretty_generate(call.payload)
-                - if call.response.present?
-                  %p.grok-call-label Response
-                  %pre.grok-call-response= JSON.pretty_generate(call.response)
-- else
-  %p.scene-events-empty No events yet.
+#scene-live{ data: { controller: "refresh", refresh_seconds_value: 10 } }
+  %h2.field-label Events
+  - if @scene.awaiting_event?
+    %p.scene-refresh
+      Waiting for the player&hellip; checking again in
+      %span.scene-refresh-countdown 10
+      seconds.
+  - if @scene.events.chronological.any?
+    %ol.scene-events
+      - @scene.events.chronological.each do |event|
+        %li.scene-event
+          - if event.directive.present?
+            %p.event-guidance
+              %strong Guidance
+              &middot;
+              = event.directive
+          - if event.intent.present?
+            %p.event-intent
+              %strong Intent
+              &middot;
+              = event.intent
+          - if event.roll_results.any?
+            .event-rolls
+              - event.roll_results.includes(:roll_table).each do |result|
+                %details.roll-result
+                  %summary
+                    %span.roll-result-table= result.roll_table.description
+                    %span.roll-result-outcome= "→ rolled #{result.roll_result} (#{result.result})"
+                  %table.roll-table
+                    %thead
+                      %tr
+                        %th.roll-table-range Roll
+                        %th.roll-table-outcome Result
+                    %tbody
+                      - chosen = result.roll_table.row_for(result.roll_result)
+                      - result.roll_table.possible_results.each do |row|
+                        %tr{ class: ("roll-table-row-chosen" if row == chosen) }
+                          %td.roll-table-range= roll_range_label(row)
+                          %td.roll-table-outcome= row["result"]
+          - if event.prose.present?
+            .event-prose= simple_format(event.prose)
+          - else
+            %p.event-status= event.status.humanize
+          - if event.grok_calls.any?
+            %details.event-grok-calls
+              %summary= "Grok calls (#{event.grok_calls.count})"
+              - event.grok_calls.order(:created_at).each_with_index do |call, index|
+                .grok-call
+                  %p.grok-call-header
+                    %span.grok-call-number= "Call ##{index + 1}"
+                    %span.grok-call-status= "HTTP #{call.status}"
+                  %p.grok-call-label Request
+                  %pre.grok-call-request= JSON.pretty_generate(call.payload)
+                  - if call.response.present?
+                    %p.grok-call-label Response
+                    %pre.grok-call-response= JSON.pretty_generate(call.response)
+  - else
+    %p.scene-events-empty No events yet.
 
-- if @scene.narrator_mode? && !@scene.finished?
-  - if @scene.awaiting_gm_event
-    = render "scenes/adjudication"
-  - elsif !@scene.awaiting_event?
-    %h2.field-label Player turn
-    = form_with url: world_scene_events_path(@world, @scene), method: :post do
-      .form-field
-        = label_tag "event_directive", "Optional guidance for the player"
-        = text_area_tag "event[directive]", nil, rows: 2, id: "event_directive"
-      = submit_tag "Let #{@scene.character.name} act"
+  - if @scene.narrator_mode? && !@scene.finished?
+    - if @scene.awaiting_gm_event
+      = render "scenes/adjudication"
+    - elsif !@scene.awaiting_event?
+      %h2.field-label Player turn
+      = form_with url: world_scene_events_path(@world, @scene), method: :post do
+        .form-field
+          = label_tag "event_directive", "Optional guidance for the player"
+          = text_area_tag "event[directive]", nil, rows: 2, id: "event_directive"
+        = submit_tag "Let #{@scene.character.name} act"
 
 %p.page-links
   = link_to "Edit", edit_world_scene_path(@world, @scene)
