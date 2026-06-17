@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     resources :scenes do
       resources :events, only: %i[create] do
         post :adjudicate, on: :member
+        post :narrate, on: :collection
       end
     end
   end

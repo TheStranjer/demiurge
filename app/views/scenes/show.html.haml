@@ -85,6 +85,13 @@
           = text_area_tag "event[directive]", nil, rows: 2, id: "event_directive"
         = submit_tag "Let #{@scene.character.name} act"
 
+      %h2.field-label Narrator
+      = form_with url: narrate_world_scene_events_path(@world, @scene), method: :post do
+        .form-field
+          = label_tag "event_prose", "Declare what happens"
+          = text_area_tag "event[prose]", nil, rows: 4, id: "event_prose"
+        = submit_tag "Declare it happens"
+
 %p.page-links
   = link_to "Edit", edit_world_scene_path(@world, @scene)
   &middot;

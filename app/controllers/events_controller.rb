@@ -6,14 +6,21 @@ class EventsController < ApplicationController
   before_action :set_scene
 
   def create
-    unless @scene.narrator_mode? && !@scene.finished? && !@scene.awaiting_event? && @scene.awaiting_gm_event.nil?
-      redirect_to [@world, @scene], alert: t("events.unavailable")
-      return
-    end
+    return unless narrator_can_act?
 
-    @event = @scene.events.create!(event_params.merge(status: "pending"))
-    AdvanceSceneJob.perform_later(@event)
+    start_player_turn(event_params)
     redirect_to [@world, @scene], notice: t("events.started")
+  end
+
+  def narrate
+    return unless narrator_can_act?
+
+    prose = narration_params[:prose].to_s.strip
+    return redirect_to([@world, @scene], alert: t("events.empty_narration")) if prose.blank?
+
+    @scene.events.create!(prose: prose, status: "complete")
+    start_player_turn
+    redirect_to [@world, @scene], notice: t("events.narrated")
   end
 
   def adjudicate
@@ -32,6 +39,22 @@ class EventsController < ApplicationController
 
   private
 
+  def narrator_can_act?
+    return true if narrator_idle?
+
+    redirect_to [@world, @scene], alert: t("events.unavailable")
+    false
+  end
+
+  def narrator_idle?
+    @scene.narrator_mode? && !@scene.finished? && !@scene.awaiting_event? && @scene.awaiting_gm_event.nil?
+  end
+
+  def start_player_turn(attributes = {})
+    @event = @scene.events.create!(attributes.to_h.merge(status: "pending"))
+    AdvanceSceneJob.perform_later(@event)
+  end
+
   def set_world
     @world = current_user.worlds.find(params.expect(:world_id))
   end
@@ -42,6 +65,10 @@ class EventsController < ApplicationController
 
   def event_params
     params.expect(event: %i[directive])
+  end
+
+  def narration_params
+    params.expect(event: %i[prose])
   end
 
   def adjudication_tables

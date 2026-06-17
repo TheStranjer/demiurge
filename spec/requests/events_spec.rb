@@ -79,6 +79,45 @@ RSpec.describe "Events", type: :request do
     end
   end
 
+  describe "POST narrate" do
+    before { sign_in(user) }
+
+    it "records the narrator's declaration and immediately starts the player's intent" do
+      scene = create_scene
+      expect do
+        post narrate_world_scene_events_path(world, scene), params: { event: { prose: "The bridge collapses." } }
+      end.to change(Event, :count).by(2).and have_enqueued_job(AdvanceSceneJob)
+
+      declared = scene.events.chronological.first
+      expect(declared).to have_attributes(prose: "The bridge collapses.", intent: nil, status: "complete")
+      expect(scene.events.chronological.last.status).to eq("pending")
+      expect(response).to redirect_to(world_scene_path(world, scene))
+    end
+
+    it "refuses an empty declaration" do
+      scene = create_scene
+      expect do
+        post narrate_world_scene_events_path(world, scene), params: { event: { prose: "   " } }
+      end.not_to change(Event, :count)
+      expect(response).to redirect_to(world_scene_path(world, scene))
+    end
+
+    it "refuses to narrate in a player-mode scene" do
+      scene = create_scene(play_mode: "player")
+      expect do
+        post narrate_world_scene_events_path(world, scene), params: { event: { prose: "Something." } }
+      end.not_to change(Event, :count)
+    end
+
+    it "refuses to narrate while a turn is already in progress" do
+      scene = create_scene
+      scene.events.create!(status: "awaiting_gm", intent: "Kara lunges.")
+      expect do
+        post narrate_world_scene_events_path(world, scene), params: { event: { prose: "Something." } }
+      end.not_to change(Event, :count)
+    end
+  end
+
   describe "POST adjudicate" do
     before { sign_in(user) }
 

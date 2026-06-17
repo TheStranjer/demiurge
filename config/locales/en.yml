@@ -55,6 +55,8 @@ en:
 
   events:
     started: "The player is deciding what to do next."
+    narrated: "You declared what happens. The player is deciding what to do next."
+    empty_narration: "Describe what happens before declaring it."
     adjudicated: "Rolling the chosen tables and narrating the outcome."
     invalid_tables: "Some roll tables were incomplete. Please give each table at least one result row."
     unavailable: "That action isn't available for this scene right now."
