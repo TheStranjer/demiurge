@@ -24,11 +24,33 @@ module SceneNarration
     def declare_intent(arguments)
       intent = arguments["intent"].to_s
       suggested_ids = Array(arguments["suggested_roll_table_ids"]).map(&:to_i) & library_ids
-      created = Array(arguments["new_tables"]).map { |definition| create_suggestion(definition) }
-      event.update!(intent: intent, suggested_roll_table_ids: suggested_ids)
+      created = create_suggestions(Array(arguments["new_tables"]), suggested_ids)
+      event.update!(intent: intent, suggested_roll_table_ids: suggested_ids.uniq)
       Result.new(signal: :intent,
-                 content: { intent: intent, suggested_roll_table_ids: suggested_ids,
+                 content: { intent: intent, suggested_roll_table_ids: suggested_ids.uniq,
                             new_table_ids: created.map(&:id), }.to_json,)
+    end
+
+    def create_suggestions(definitions, suggested_ids)
+      known = library_signatures
+      seen = {}
+      definitions.filter_map do |definition|
+        signature = RollTable.normalize_description(definition["description"])
+        if (existing_id = known[signature])
+          suggested_ids << existing_id unless suggested_ids.include?(existing_id)
+          next
+        end
+        next if seen.key?(signature)
+
+        seen[signature] = true
+        create_suggestion(definition)
+      end
+    end
+
+    def library_signatures
+      scene.world.roll_tables.library.each_with_object({}) do |table, map|
+        map[table.signature] ||= table.id
+      end
     end
 
     def prose(arguments)

@@ -79,6 +79,30 @@ RSpec.describe SceneNarration::IntentDeclarer do
     end
   end
 
+  context "when a proposed table duplicates an existing library table" do
+    before do
+      stub_grok(declare_message(new_tables: [new_table_definition.merge(description: "  EXISTING   strike table ")]),
+                validation_message(follows: true),)
+    end
+
+    it "reuses the library table instead of creating a duplicate suggestion" do
+      existing_table
+      expect { declare }.not_to(change { world.roll_tables.suggestions.count })
+      expect(event.reload.suggested_roll_table_ids).to eq([existing_table.id])
+    end
+  end
+
+  context "when the same new table is proposed twice in one turn" do
+    before do
+      stub_grok(declare_message(new_tables: [new_table_definition, new_table_definition.merge(quantity: 2)]),
+                validation_message(follows: true),)
+    end
+
+    it "creates the table only once" do
+      expect { declare }.to change { world.roll_tables.suggestions.count }.by(1)
+    end
+  end
+
   context "when the validator rejects godmodding once, then passes" do
     before do
       stub_grok(declare_message(intent: "Kara kills the bandit instantly."),

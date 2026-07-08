@@ -41,6 +41,14 @@ class RollTable < ApplicationRecord
     quantity.to_i * denomination.to_i
   end
 
+  def self.normalize_description(value)
+    value.to_s.strip.downcase.gsub(/\s+/, " ")
+  end
+
+  def signature
+    self.class.normalize_description(description)
+  end
+
   private
 
   def normalize_modifiers

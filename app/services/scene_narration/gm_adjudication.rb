@@ -62,7 +62,19 @@ module SceneNarration
 
     def upsert_draft(table)
       attributes = draft_attributes(table)
-      origin = origin_suggestion(table["origin_suggestion_id"])
+      existing = library_match(attributes[:description])
+      return existing if existing
+
+      promote_or_create(attributes, table["origin_suggestion_id"])
+    end
+
+    def library_match(description)
+      signature = RollTable.normalize_description(description)
+      @scene.world.roll_tables.library.detect { |candidate| candidate.signature == signature }
+    end
+
+    def promote_or_create(attributes, origin_id)
+      origin = origin_suggestion(origin_id)
       if origin
         origin.update!(attributes.merge(suggestion: false, event: nil))
         origin

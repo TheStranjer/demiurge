@@ -66,6 +66,24 @@ RSpec.describe SceneNarration::GmAdjudication do
     expect(event.roll_results.first.roll_table.description).to eq("Improvised gambit")
   end
 
+  it "reuses an existing library table instead of creating a duplicate from a draft" do
+    existing
+    payload = [{ "include" => "1", "source" => "draft", "description" => "  WEATHER ",
+                 "denomination" => "6", "quantity" => "1", "results" => draft_rows, }]
+    expect { described_class.call(event, payload) }.not_to(change { world.roll_tables.library.count })
+    expect(event.roll_results.map(&:roll_table)).to eq([existing])
+  end
+
+  it "reuses an existing library table instead of promoting a duplicate suggestion" do
+    library = world.roll_tables.create!(description: "Lunge", denomination: 20, quantity: 1,
+                                        possible_results: [{ "min" => nil, "max" => nil, "result" => "hit" }],)
+    payload = [{ "include" => "1", "source" => "draft", "origin_suggestion_id" => suggestion.id.to_s,
+                 "description" => "Lunge", "denomination" => "20", "quantity" => "1", "results" => draft_rows, }]
+    expect { described_class.call(event, payload) }.not_to(change { world.roll_tables.library.count })
+    expect(event.roll_results.map(&:roll_table)).to eq([library])
+    expect(RollTable.exists?(suggestion.id)).to be(false)
+  end
+
   it "discards suggestions the Game Master did not accept" do
     suggestion
     expect { described_class.call(event, []) }.to change(RollTable, :count).by(-1)
