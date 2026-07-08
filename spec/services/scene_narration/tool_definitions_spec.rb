@@ -59,6 +59,12 @@ RSpec.describe SceneNarration::ToolDefinitions do
     expect(schema[:items]).to eq({ type: "integer" })
   end
 
+  it "steers the model to reuse existing tables instead of proposing duplicates" do
+    properties = definitions.intent_tools.first.dig(:function, :parameters, :properties)
+    expect(properties.dig(:suggested_roll_table_ids, :description)).to include("prefer reusing")
+    expect(properties.dig(:new_tables, :description)).to include("no existing library table fits")
+  end
+
   def new_table_schema
     definitions.intent_tools.first.dig(:function, :parameters, :properties, :new_tables, :items)
   end

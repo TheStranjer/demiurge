@@ -38,10 +38,11 @@ RSpec.describe SceneNarration::Prompt do
       expect(intent_system_content).to include("another character's actions, decisions, or fate")
     end
 
-    it "lists the world's library tables with their ids" do
+    it "lists the world's library tables with their ids and urges reuse over duplication" do
       table = world.roll_tables.create!(denomination: 6, quantity: 1, description: "Storm severity",
                                         possible_results: [{ "min" => nil, "max" => nil, "result" => "harsh" }],)
       expect(intent_system_content).to include("##{table.id}: Storm severity")
+      expect(intent_system_content).to include("Reuse a fitting one by its id instead of proposing a duplicate")
     end
 
     it "uses the Game Master's guidance as the current situation" do

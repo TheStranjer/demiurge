@@ -40,6 +40,13 @@ module SceneNarration
       required: %w[description denomination quantity contested entity_modifiers defender_modifiers possible_results],
     }.freeze
 
+    SUGGESTED_IDS_HINT = "Ids of existing library tables (listed in the system prompt) to reuse for this attempt. " \
+                         "Always prefer reusing a table that already fits over proposing a new one."
+
+    NEW_TABLES_HINT = "Propose a new table ONLY when no existing library table fits the attempt. Never restate a " \
+                      "table that already exists — reuse it through suggested_roll_table_ids instead. New tables " \
+                      "must be reusable, not tied to one character or moment."
+
     def initialize(scene, event = nil)
       @scene = scene
       @event = event
@@ -82,8 +89,8 @@ module SceneNarration
       item = ids.any? ? { type: "integer", enum: ids } : { type: "integer" }
       {
         intent: { type: "string" },
-        suggested_roll_table_ids: { type: "array", items: item },
-        new_tables: { type: "array", items: NEW_TABLE },
+        suggested_roll_table_ids: { type: "array", items: item, description: SUGGESTED_IDS_HINT },
+        new_tables: { type: "array", items: NEW_TABLE, description: NEW_TABLES_HINT },
       }
     end
 

@@ -62,8 +62,7 @@ module SceneNarration
       summaries = scene.previous_summaries
       return nil if summaries.empty?
 
-      lines = summaries.map { |summary| "- #{summary}" }
-      "Summaries of previous scenes:\n#{lines.join("\n")}"
+      "Summaries of previous scenes:\n#{summaries.map { |summary| "- #{summary}" }.join("\n")}"
     end
 
     def history_messages
@@ -134,9 +133,10 @@ module SceneNarration
 
     def tables_block
       tables = scene.world.roll_tables.library.order(:id).map { |table| "- ##{table.id}: #{table.description}" }
-      return "Available roll tables:\n#{tables.join("\n")}" if tables.any?
+      return ExampleTable::GUIDANCE if tables.empty?
 
-      ExampleTable::GUIDANCE
+      header = "Reusable library tables. Reuse a fitting one by its id instead of proposing a duplicate:"
+      "#{header}\n#{tables.join("\n")}"
     end
 
     def intent_instructions
