@@ -165,10 +165,14 @@ module SceneNarration
     end
 
     def intent_validation_instructions
-      "You are a strict validator checking a player's declared intent. Call validate_result with follows: false " \
-        "if the intent godmods — it dictates another character's actions, decisions, or fate, or asserts its own " \
-        "outcome as already succeeded instead of merely attempted. Otherwise call follows: true. When follows is " \
-        "false, the reason must explain exactly what is wrong so the player can restate it as a pure attempt."
+      "You are a strict validator checking a player's declared intent. An intent is both what the character " \
+        "attempts and the goal they pursue by it, so a goal aimed at another character — to persuade, deceive, " \
+        "intimidate, or otherwise move them — is expected and valid; never reject an intent merely for naming " \
+        "such a goal. Call validate_result with follows: false only if the intent godmods by treating an " \
+        "uncertain outcome as already settled: it states another character's actual response, decision, or fate " \
+        "as fact, or asserts its own outcome as already succeeded instead of merely attempted. Otherwise call " \
+        "follows: true. When follows is false, the reason must explain exactly what is wrong so the player can " \
+        "restate it as a pure attempt."
     end
 
     def validation_instructions

@@ -44,7 +44,7 @@ class SceneNarrator
       terminal = main_loop
       return :failed if terminal.nil?
 
-      event.update!(status: "validating", prose: terminal.content, ended_scene: terminal.signal == :end_scene)
+      event.update!(status: "validating")
       reason = validation_failure(terminal.content)
       return complete(terminal) if reason.nil?
 
@@ -54,8 +54,8 @@ class SceneNarrator
   end
 
   def complete(terminal)
+    event.update!(prose: terminal.content, ended_scene: terminal.signal == :end_scene, status: "complete")
     scene.finish!(summary: terminal.summary) if event.ended_scene
-    event.update!(status: "complete")
     :complete
   end
 
