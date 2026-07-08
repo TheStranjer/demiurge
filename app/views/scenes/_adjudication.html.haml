@@ -42,7 +42,7 @@
 
     %h3.field-label New table
     %div{ data: { "table-builder-target": "list" } }
-    %button.link{ type: "button", data: { action: "table-builder#addBlank" } } Add table from scratch
+    %button.link.table-add{ type: "button", data: { action: "table-builder#addBlank" } } + Add table from scratch
     %template{ data: { "table-builder-target": "template" } }
       = render "scenes/table_fields", index: "__INDEX__", table: nil, origin: nil, checked: true
 

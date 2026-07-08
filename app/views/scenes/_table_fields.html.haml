@@ -6,11 +6,12 @@
 - defenders = @scene.world.characters.where.not(id: @scene.character_id).order(:name)
 .table-block{ data: { row_next: rows.size } }
   .table-block-head
-    = check_box_tag "tables[#{index}][include]", "1", checked, class: "table-block-include"
+    = check_box_tag "tables[#{index}][include]", "1", checked, class: "table-block-include", id: "table_block_include_#{index}"
+    = label_tag "table_block_include_#{index}", "Include this table"
     = hidden_field_tag "tables[#{index}][source]", "draft"
     - if origin
       = hidden_field_tag "tables[#{index}][origin_suggestion_id]", origin.id
-    %button.link{ type: "button", data: { action: "table-builder#removeBlock" } } Remove table
+    %button.link.table-block-remove{ type: "button", data: { action: "table-builder#removeBlock" } } Remove table
   .form-field
     = label_tag "tables[#{index}][description]", "Description"
     = text_field_tag "tables[#{index}][description]", table&.description
@@ -62,4 +63,4 @@
       %td= text_field_tag "tables[#{index}][results][__ROW__][result]", nil
       %td
         %button.link{ type: "button", data: { action: "table-builder#removeRow" } } ✕
-  %button.link{ type: "button", data: { action: "table-builder#addRow" } } Add row
+  %button.link.table-add{ type: "button", data: { action: "table-builder#addRow" } } + Add row

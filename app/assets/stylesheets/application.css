@@ -318,6 +318,186 @@ button[type="submit"]:hover {
   margin-top: 0.25rem;
 }
 
+/* --- GM adjudication (narrator-mode table editor) ------------------------ */
+
+.gm-instructions {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+/* Each roll-table suggestion is a distinct card, so blocks don't run together. */
+.table-block,
+.table-existing {
+  margin-bottom: 1.25rem;
+  padding: 1.15rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-surface);
+}
+
+/* A forked copy lives inside its existing-table card — flatten it so the card
+   isn't doubled, and rule it off from the head above. */
+.table-fork {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+.table-fork .table-block {
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+
+.table-block-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.table-block-head label {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.table-block-remove {
+  margin-left: auto;
+}
+
+.table-existing-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.table-existing-head > label {
+  flex: 1;
+  min-width: 8rem;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.table-existing-head details {
+  flex-basis: 100%;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+/* Dice notation reads on a single line: Dice [n] × Sides [n]. */
+.table-dice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.table-dice label {
+  display: inline;
+  margin: 0;
+}
+
+.table-dice-times {
+  color: var(--color-muted);
+  font-size: 1.1rem;
+}
+
+.gm-adjudication input[type="number"],
+.gm-adjudication input[type="text"] {
+  padding: 0.5rem 0.6rem;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.gm-adjudication input:focus {
+  outline: none;
+  border-color: var(--color-link);
+}
+
+.table-dice input[type="number"] {
+  width: 4.5rem;
+}
+
+.roll-table td input {
+  width: 100%;
+}
+
+.roll-table .result-row td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+/* Secondary buttons (add / remove / customize) — framed, not bare browser buttons. */
+.gm-adjudication button.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem;
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-link);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+.gm-adjudication button.link:hover {
+  color: var(--color-link-hover);
+  border-color: var(--color-link);
+  background-color: rgba(212, 175, 55, 0.08);
+}
+
+.table-add {
+  margin-top: 0.5rem;
+}
+
+/* Row delete stays a quiet compact icon button until hovered. */
+.roll-table button.link {
+  padding: 0.25rem 0.55rem;
+  border-color: transparent;
+  color: var(--color-muted);
+}
+
+.roll-table button.link:hover {
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background-color: rgba(255, 107, 107, 0.08);
+}
+
+.form-actions {
+  margin-top: 1.5rem;
+}
+
+/* submit_tag renders <input type="submit">, which the global button rule
+   doesn't match — give Resolve the primary style, sized to its content. */
+.form-actions input[type="submit"] {
+  width: auto;
+  margin-top: 0;
+  padding: 0.7rem 1.6rem;
+  background-color: var(--color-link);
+  color: #1a1500;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.form-actions input[type="submit"]:hover {
+  background-color: var(--color-link-hover);
+}
+
 /* --- Intent -------------------------------------------------------------- */
 
 .event-intent {
