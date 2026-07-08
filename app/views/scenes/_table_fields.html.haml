@@ -1,6 +1,9 @@
 - checked = local_assigns.fetch(:checked, true)
 - origin = local_assigns[:origin]
 - rows = (table&.possible_results.presence || [{ "min" => nil, "max" => nil, "result" => "" }])
+- entity_mods = Array(table&.entity_modifiers)
+- defender_mods = Array(table&.defender_modifiers)
+- defenders = @scene.world.characters.where.not(id: @scene.character_id).order(:name)
 .table-block{ data: { row_next: rows.size } }
   .table-block-head
     = check_box_tag "tables[#{index}][include]", "1", checked, class: "table-block-include"
@@ -17,6 +20,26 @@
     %span.table-dice-times ×
     = label_tag "tables[#{index}][denomination]", "Sides"
     = number_field_tag "tables[#{index}][denomination]", (table&.denomination || 6), min: 1
+  .form-field.table-contested
+    = hidden_field_tag "tables[#{index}][contested]", "0"
+    = check_box_tag "tables[#{index}][contested]", "1", table&.contested, id: "table_#{index}_contested"
+    = label_tag "table_#{index}_contested", "Contested (another character resists)"
+  .table-modifiers
+    %fieldset.table-modifier-group
+      %legend Attacker bonuses
+      - Character::STATS.each do |stat|
+        %label.table-modifier
+          = check_box_tag "tables[#{index}][entity_modifiers][]", stat, entity_mods.include?(stat.to_s), id: "table_#{index}_entity_#{stat}"
+          = stat
+    %fieldset.table-modifier-group
+      %legend Defender debuffs
+      - Character::STATS.each do |stat|
+        %label.table-modifier
+          = check_box_tag "tables[#{index}][defender_modifiers][]", stat, defender_mods.include?(stat.to_s), id: "table_#{index}_defender_#{stat}"
+          = stat
+    .form-field.table-defender
+      = label_tag "tables[#{index}][defender_id]", "Defender (for contested rolls)"
+      = select_tag "tables[#{index}][defender_id]", options_from_collection_for_select(defenders, :id, :name), include_blank: true
   %table.roll-table
     %thead
       %tr

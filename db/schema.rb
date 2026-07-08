@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_16_222343) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_08_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,24 +60,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_222343) do
   end
 
   create_table "roll_results", force: :cascade do |t|
+    t.bigint "character_id"
     t.datetime "created_at", null: false
+    t.bigint "defender_id"
     t.bigint "entity_defender_id"
     t.string "entity_defender_type"
     t.bigint "entity_id", null: false
     t.string "entity_type", null: false
+    t.jsonb "modifiers", default: [], null: false
     t.integer "roll_result", null: false
     t.integer "roll_result_defender"
     t.bigint "roll_table_id", null: false
+    t.bigint "scene_id"
     t.datetime "updated_at", null: false
+    t.index ["character_id"], name: "index_roll_results_on_character_id"
+    t.index ["defender_id"], name: "index_roll_results_on_defender_id"
     t.index ["entity_defender_type", "entity_defender_id"], name: "index_roll_results_on_entity_defender"
     t.index ["entity_type", "entity_id"], name: "index_roll_results_on_entity"
     t.index ["roll_table_id"], name: "index_roll_results_on_roll_table_id"
+    t.index ["scene_id"], name: "index_roll_results_on_scene_id"
   end
 
   create_table "roll_tables", force: :cascade do |t|
+    t.boolean "contested", default: false, null: false
     t.datetime "created_at", null: false
+    t.string "defender_modifiers", default: [], null: false, array: true
     t.integer "denomination", null: false
     t.text "description", null: false
+    t.string "entity_modifiers", default: [], null: false, array: true
     t.bigint "event_id"
     t.jsonb "possible_results", default: [], null: false
     t.integer "quantity", default: 1, null: false
@@ -145,7 +155,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_16_222343) do
 
   add_foreign_key "characters", "worlds"
   add_foreign_key "events", "scenes"
+  add_foreign_key "roll_results", "characters"
+  add_foreign_key "roll_results", "characters", column: "defender_id"
   add_foreign_key "roll_results", "roll_tables"
+  add_foreign_key "roll_results", "scenes"
   add_foreign_key "roll_tables", "events", on_delete: :nullify
   add_foreign_key "roll_tables", "worlds"
   add_foreign_key "scene_presences", "characters"

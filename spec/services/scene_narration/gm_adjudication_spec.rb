@@ -76,4 +76,39 @@ RSpec.describe SceneNarration::GmAdjudication do
     payload = [{ "include" => "0", "source" => "existing", "roll_table_id" => existing.id.to_s }]
     expect { described_class.call(event, payload) }.not_to change(event.roll_results, :count)
   end
+
+  it "records the acting character on every roll" do
+    payload = [{ "include" => "1", "source" => "existing", "roll_table_id" => existing.id.to_s }]
+    described_class.call(event, payload)
+    expect(event.roll_results.first).to have_attributes(character: scene.character, scene: scene, defender: nil)
+  end
+
+  it "records the chosen defender for a contested table" do
+    foe = world.characters.create!(character_attributes.merge(name: "Bram"))
+    contested = world.roll_tables.create!(description: "Deceive", denomination: 20, quantity: 1, contested: true,
+                                          possible_results: [{ "min" => nil, "max" => nil, "result" => "hit" }],)
+    payload = [{ "include" => "1", "source" => "existing", "roll_table_id" => contested.id.to_s,
+                 "defender_id" => foe.id.to_s, }]
+    described_class.call(event, payload)
+    expect(event.roll_results.first.defender).to eq(foe)
+  end
+
+  it "brings an absent defender into the scene before rolling" do
+    foe = world.characters.create!(character_attributes.merge(name: "Bram"))
+    contested = world.roll_tables.create!(description: "Deceive", denomination: 20, quantity: 1, contested: true,
+                                          possible_results: [{ "min" => nil, "max" => nil, "result" => "hit" }],)
+    payload = [{ "include" => "1", "source" => "existing", "roll_table_id" => contested.id.to_s,
+                 "defender_id" => foe.id.to_s, }]
+    expect { described_class.call(event, payload) }.to change { scene.reload.present_characters.include?(foe) }
+      .from(false).to(true)
+  end
+
+  it "persists contested and modifier stats on a promoted draft" do
+    payload = [{ "include" => "1", "source" => "draft", "description" => "Feint", "denomination" => "20",
+                 "quantity" => "1", "contested" => "1", "entity_modifiers" => ["finesse"],
+                 "defender_modifiers" => ["awareness"], "results" => draft_rows, }]
+    described_class.call(event, payload)
+    table = event.roll_results.first.roll_table
+    expect(table).to have_attributes(contested: true, entity_modifiers: ["finesse"], defender_modifiers: ["awareness"])
+  end
 end

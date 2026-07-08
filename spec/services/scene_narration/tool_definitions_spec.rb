@@ -58,4 +58,18 @@ RSpec.describe SceneNarration::ToolDefinitions do
     schema = definitions.intent_tools.first.dig(:function, :parameters, :properties, :suggested_roll_table_ids)
     expect(schema[:items]).to eq({ type: "integer" })
   end
+
+  def new_table_schema
+    definitions.intent_tools.first.dig(:function, :parameters, :properties, :new_tables, :items)
+  end
+
+  it "requires contested and both modifier lists on proposed tables" do
+    expect(new_table_schema[:required]).to include("contested", "entity_modifiers", "defender_modifiers")
+  end
+
+  it "constrains modifier stats to the real character stats" do
+    stats = Character::STATS.map(&:to_s)
+    expect(new_table_schema.dig(:properties, :entity_modifiers, :items, :enum)).to eq(stats)
+    expect(new_table_schema.dig(:properties, :defender_modifiers, :items, :enum)).to eq(stats)
+  end
 end

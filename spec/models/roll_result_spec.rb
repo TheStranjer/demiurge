@@ -102,4 +102,64 @@ RSpec.describe RollResult, type: :model do
       expect(roll_result.result).to eq("outcome")
     end
   end
+
+  describe "stat modifiers" do
+    def defender
+      world.characters.create!(
+        name: "Bram", sex: "male", non_player_character: true,
+        strength: 1, dexterity: 2, endurance: 3,
+        intelligence: 0, awareness: 2, willpower: 5,
+        charisma: -5, finesse: 1, tact: -2,
+      )
+    end
+
+    def contested_table
+      world.roll_tables.create!(
+        denomination: 20, quantity: 1, description: "Deceive.", contested: true,
+        entity_modifiers: ["finesse"], defender_modifiers: ["awareness"],
+        possible_results: [{ "min" => nil, "max" => 7, "result" => "seen through" },
+                           { "min" => 8, "max" => nil, "result" => "believed" },],
+      )
+    end
+
+    def contested_roll(defender: self.defender)
+      contested_table.roll_results.new(roll_result: 6, entity: character, character: character, defender: defender)
+    end
+
+    it "adds the acting character's stat and subtracts the defender's" do
+      expect(contested_roll.modified_roll_result).to eq(8)
+    end
+
+    it "resolves the result against the modified total" do
+      expect(contested_roll.result).to eq("believed")
+    end
+
+    it "omits the defender debuff when no defender is present" do
+      expect(contested_roll(defender: nil).modified_roll_result).to eq(10)
+    end
+
+    it "applies no modifiers when the acting character is absent" do
+      roll = contested_roll(defender: nil)
+      roll.character = nil
+      expect(roll.modified_roll_result).to eq(6)
+    end
+
+    it "breaks each modifier down by stat and value" do
+      expect(contested_roll.modifier_descriptions).to eq(["+ finesse (+4)", "- awareness (+2)"])
+    end
+
+    it "snapshots the modifiers so later stat changes do not move the total" do
+      roll = contested_roll
+      roll.save!
+      character.update!(finesse: 0)
+      expect(roll.reload.modified_roll_result).to eq(8)
+    end
+
+    it "snapshots the breakdown so later stat changes do not rewrite it" do
+      roll = contested_roll
+      roll.save!
+      character.update!(finesse: 0)
+      expect(roll.reload.modifier_descriptions).to eq(["+ finesse (+4)", "- awareness (+2)"])
+    end
+  end
 end

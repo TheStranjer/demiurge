@@ -12,4 +12,10 @@ module ApplicationHelper
 
     "#{min}–#{max}"
   end
+
+  def roll_result_outcome(roll_result)
+    parts = ["rolled #{roll_result.roll_result}"] + roll_result.modifier_descriptions
+    total = roll_result.modifier_descriptions.any? ? " = #{roll_result.modified_roll_result}" : ""
+    "→ #{parts.join(" ")}#{total} (#{roll_result.result})"
+  end
 end

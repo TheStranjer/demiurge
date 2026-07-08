@@ -161,6 +161,37 @@ RSpec.describe RollTable, type: :model do
     expect(described_class.new.suggestion).to be(false)
   end
 
+  describe "contested" do
+    it "defaults to false" do
+      expect(described_class.new.contested).to be(false)
+    end
+  end
+
+  describe "stat modifiers" do
+    it "defaults both modifier lists to empty" do
+      table = described_class.new
+      expect(table.entity_modifiers).to eq([])
+      expect(table.defender_modifiers).to eq([])
+    end
+
+    it "accepts real stats" do
+      roll_table.entity_modifiers = ["finesse"]
+      roll_table.defender_modifiers = ["awareness"]
+      expect(roll_table).to be_valid
+    end
+
+    it "rejects a modifier that is not a real stat" do
+      roll_table.entity_modifiers = ["luck"]
+      expect(roll_table).not_to be_valid
+    end
+
+    it "strips blanks and duplicates before validating" do
+      roll_table.entity_modifiers = ["finesse", "finesse", "", " "]
+      roll_table.save!
+      expect(roll_table.entity_modifiers).to eq(["finesse"])
+    end
+  end
+
   describe "scopes" do
     it "separates library tables from suggestions" do
       library = world.roll_tables.create!(valid_attributes.merge(suggestion: false))

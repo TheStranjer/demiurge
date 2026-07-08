@@ -105,9 +105,13 @@ module SceneNarration
     end
 
     def roll_lines
-      @event.roll_results.includes(:roll_table).map do |result|
-        "- #{result.roll_table.description} => rolled #{result.roll_result} (#{result.result})"
-      end
+      @event.roll_results.includes(:roll_table).map { |result| roll_line(result) }
+    end
+
+    def roll_line(result)
+      descriptions = result.modifier_descriptions
+      math = descriptions.any? ? " #{descriptions.join(" ")} = #{result.modified_roll_result}" : ""
+      "- #{result.roll_table.description} => rolled #{result.roll_result}#{math} (#{result.result})"
     end
 
     def world_block
@@ -132,10 +136,7 @@ module SceneNarration
       tables = scene.world.roll_tables.library.order(:id).map { |table| "- ##{table.id}: #{table.description}" }
       return "Available roll tables:\n#{tables.join("\n")}" if tables.any?
 
-      "No roll tables exist yet, so propose one in new_tables. A table rolls `quantity` dice of `denomination` " \
-        "sides and sums them; each row's min and max bound a slice of that total — set either to null to leave " \
-        "that end open, or make them equal to single out one total. new_tables takes an array of objects shaped " \
-        "like this well-formed example:\n#{ExampleTable::TEXT}"
+      ExampleTable::GUIDANCE
     end
 
     def intent_instructions

@@ -91,6 +91,16 @@ RSpec.describe SceneNarration::Prompt do
       event.roll_results.create!(roll_table: table, roll_result: 5)
       expect(prompt.narration_messages.last.fetch(:content)).to include("Storm severity => rolled 5 (harsh)")
     end
+
+    it "spells out the stat modifiers that adjusted a roll" do
+      table = world.roll_tables.create!(denomination: 20, quantity: 1, description: "Deceive", contested: true,
+                                        entity_modifiers: ["finesse"], defender_modifiers: ["awareness"],
+                                        possible_results: [{ "min" => nil, "max" => nil, "result" => "believed" }],)
+      foe = world.characters.create!(character_attributes(name: "Bram").merge(awareness: 2))
+      event.roll_results.create!(roll_table: table, roll_result: 6, character: character, defender: foe)
+      expect(prompt.narration_messages.last.fetch(:content))
+        .to include("rolled 6 + finesse (+4) - awareness (+2) = 8 (believed)")
+    end
   end
 
   describe "previous-scene summaries" do

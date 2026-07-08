@@ -12,15 +12,32 @@ module SceneNarration
       required: %w[min max result],
     }.freeze
 
+    STAT_MODIFIERS = {
+      type: "array",
+      items: { type: "string", enum: Character::STATS.map(&:to_s) },
+    }.freeze
+
     NEW_TABLE = {
       type: "object",
       properties: {
         description: { type: "string" },
         denomination: { type: "integer" },
         quantity: { type: "integer" },
+        contested: {
+          type: "boolean",
+          description: "True when another character resists the attempt (deceiving, grappling); false for " \
+                       "uncontested feats like climbing a wall.",
+        },
+        entity_modifiers: STAT_MODIFIERS.merge(
+          description: "Stats the acting character adds to the roll (e.g. finesse when deceiving). May be empty.",
+        ),
+        defender_modifiers: STAT_MODIFIERS.merge(
+          description: "Stats the resisting character subtracts from the roll (e.g. awareness). Empty when " \
+                       "uncontested.",
+        ),
         possible_results: { type: "array", items: RESULT_ROW },
       },
-      required: %w[description denomination quantity possible_results],
+      required: %w[description denomination quantity contested entity_modifiers defender_modifiers possible_results],
     }.freeze
 
     def initialize(scene, event = nil)

@@ -2,6 +2,7 @@
 
 class RollTable < ApplicationRecord
   RESULT_KEYS = %w[min max result].freeze
+  STAT_NAMES = Character::STATS.map(&:to_s).freeze
 
   belongs_to :world
   belongs_to :event, optional: true
@@ -10,11 +11,14 @@ class RollTable < ApplicationRecord
   scope :suggestions, -> { where(suggestion: true) }
   scope :library, -> { where(suggestion: false) }
 
+  before_validation :normalize_modifiers
+
   validates :denomination, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 1 }
   validates :quantity, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 1 }
   validates :description, presence: true
 
   validate :possible_results_is_well_formed
+  validate :modifiers_reference_known_stats
 
   def row_for(value)
     possible_results.find { |row| within_bounds?(row, value) }
@@ -38,6 +42,22 @@ class RollTable < ApplicationRecord
   end
 
   private
+
+  def normalize_modifiers
+    self.entity_modifiers = clean_modifiers(entity_modifiers)
+    self.defender_modifiers = clean_modifiers(defender_modifiers)
+  end
+
+  def clean_modifiers(values)
+    Array(values).map { |value| value.to_s.strip }.compact_blank.uniq
+  end
+
+  def modifiers_reference_known_stats
+    unknown = (Array(entity_modifiers) + Array(defender_modifiers)).reject { |stat| STAT_NAMES.include?(stat) }
+    return if unknown.empty?
+
+    errors.add(:base, "unknown stat modifiers: #{unknown.uniq.join(", ")}")
+  end
 
   def within_bounds?(row, value)
     min = row["min"]

@@ -258,6 +258,66 @@ button[type="submit"]:hover {
   font-weight: 600;
 }
 
+/* --- Roll modifiers ------------------------------------------------------ */
+
+.table-contested {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.table-contested label {
+  margin: 0;
+}
+
+.table-modifiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.table-modifier-group {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background-color: var(--color-surface);
+  padding: 0.5rem 0.65rem 0.65rem;
+  margin: 0;
+}
+
+.table-modifier-group legend {
+  padding: 0 0.35rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+}
+
+.table-modifier {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.table-modifier:hover {
+  background-color: rgba(212, 175, 55, 0.08);
+}
+
+.table-modifier:has(input:checked) {
+  background-color: rgba(212, 175, 55, 0.15);
+  color: var(--color-link);
+  font-weight: 600;
+}
+
+.table-defender {
+  grid-column: 1 / -1;
+  margin-top: 0.25rem;
+}
+
 /* --- Intent -------------------------------------------------------------- */
 
 .event-intent {

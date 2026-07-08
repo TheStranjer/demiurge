@@ -40,7 +40,8 @@ module SceneNarration
     end
 
     def create_suggestion(definition)
-      attributes = definition.slice("description", "denomination", "quantity", "possible_results")
+      attributes = definition.slice("description", "denomination", "quantity", "possible_results",
+                                    "contested", "entity_modifiers", "defender_modifiers",)
       scene.world.roll_tables.create!(attributes.merge(suggestion: true, event: event))
     end
 

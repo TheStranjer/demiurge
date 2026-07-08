@@ -14,9 +14,9 @@ module SceneNarration
 
     def call
       ActiveRecord::Base.transaction do
-        final = included_tables.filter_map { |table| resolve_table(table) }
+        rolls = included_tables.filter_map { |table| build_roll(table) }
         @event.proposed_roll_tables.destroy_all
-        roll_all(final)
+        roll_all(rolls)
         @event.update!(status: "rolled", attempts: 0)
       end
       true
@@ -26,6 +26,30 @@ module SceneNarration
 
     def included_tables
       @tables.select { |table| truthy?(table["include"]) }
+    end
+
+    def build_roll(table)
+      resolved = resolve_table(table)
+      return nil if resolved.nil?
+
+      { table: resolved, defender: defender_for(table, resolved) }
+    end
+
+    def defender_for(table, resolved)
+      return nil unless resolved.contested?
+
+      id = table["defender_id"]
+      return nil if id.blank? || id.to_i == @scene.character_id
+
+      @scene.world.characters.find_by(id: id)
+    end
+
+    def ensure_present(character)
+      return if character.nil? || character.id == @scene.character_id
+
+      presence = @scene.scene_presences.find_or_initialize_by(character: character)
+      presence.departed_at = nil
+      presence.save!
     end
 
     def resolve_table(table)
@@ -52,6 +76,9 @@ module SceneNarration
         description: table["description"].to_s,
         denomination: table["denomination"].to_i,
         quantity: (table["quantity"].presence || 1).to_i,
+        contested: truthy?(table["contested"]) || false,
+        entity_modifiers: Array(table["entity_modifiers"]),
+        defender_modifiers: Array(table["defender_modifiers"]),
         possible_results: result_rows(table["results"]),
       }
     end
@@ -73,9 +100,12 @@ module SceneNarration
       @event.proposed_roll_tables.find_by(id: id)
     end
 
-    def roll_all(tables)
-      tables.each do |table|
-        @event.roll_results.create!(roll_table: table, roll_result: table.roll)
+    def roll_all(rolls)
+      rolls.each do |roll|
+        table = roll[:table]
+        ensure_present(roll[:defender])
+        @event.roll_results.create!(roll_table: table, roll_result: table.roll,
+                                    scene: @scene, character: @scene.character, defender: roll[:defender],)
       end
     end
 
