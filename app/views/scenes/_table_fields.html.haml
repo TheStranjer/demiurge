@@ -38,6 +38,7 @@
           = check_box_tag "tables[#{index}][defender_modifiers][]", stat, defender_mods.include?(stat.to_s), id: "table_#{index}_defender_#{stat}"
           = stat
     = render "scenes/defender_field", index: index
+  = render "scenes/manual_modifier_field", index: index
   %table.roll-table
     %thead
       %tr

@@ -3,6 +3,7 @@
 class RollResult < ApplicationRecord
   ENTITY_ROLE = "entity"
   DEFENDER_ROLE = "defender"
+  MANUAL_ROLE = "manual"
 
   belongs_to :roll_table
   belongs_to :entity, polymorphic: true
@@ -60,7 +61,15 @@ class RollResult < ApplicationRecord
     return [] if roll_table.nil?
 
     modifier_entries(character, roll_table.entity_modifiers, ENTITY_ROLE) +
-      modifier_entries(defender, roll_table.defender_modifiers, DEFENDER_ROLE)
+      modifier_entries(defender, roll_table.defender_modifiers, DEFENDER_ROLE) +
+      manual_modifier_entries
+  end
+
+  def manual_modifier_entries
+    value = manual_modifier.to_i
+    return [] if value.zero?
+
+    [{ "role" => MANUAL_ROLE, "stat" => "manual", "value" => value }]
   end
 
   def modifier_entries(subject, stats, role)

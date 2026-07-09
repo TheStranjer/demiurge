@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_08_000003) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_09_001143) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,6 +69,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_000003) do
     t.string "entity_defender_type"
     t.bigint "entity_id", null: false
     t.string "entity_type", null: false
+    t.integer "manual_modifier", default: 0, null: false
     t.jsonb "modifiers", default: [], null: false
     t.integer "roll_result", null: false
     t.integer "roll_result_defender"

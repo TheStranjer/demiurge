@@ -39,6 +39,7 @@
             = render "scenes/roll_table_preview", table: table
           - if table.contested?
             = render "scenes/defender_field", index: as_is_index
+          = render "scenes/manual_modifier_field", index: as_is_index
         .table-fork{ hidden: true }
           = render "scenes/table_fields", index: fork_index, table: table, origin: nil, checked: false
 

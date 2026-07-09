@@ -121,6 +121,15 @@ RSpec.describe SceneNarration::GmAdjudication do
       .from(false).to(true)
   end
 
+  it "applies the Game Master's manual modifier to the roll" do
+    payload = [{ "include" => "1", "source" => "existing", "roll_table_id" => existing.id.to_s,
+                 "manual_modifier" => "2", }]
+    described_class.call(event, payload)
+    result = event.roll_results.first
+    expect(result).to have_attributes(manual_modifier: 2,
+                                      modified_roll_result: result.roll_result + 2,)
+  end
+
   it "persists contested and modifier stats on a promoted draft" do
     payload = [{ "include" => "1", "source" => "draft", "description" => "Feint", "denomination" => "20",
                  "quantity" => "1", "contested" => "1", "entity_modifiers" => ["finesse"],

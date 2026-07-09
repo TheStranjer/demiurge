@@ -162,4 +162,33 @@ RSpec.describe RollResult, type: :model do
       expect(roll.reload.modifier_descriptions).to eq(["+ finesse (+4)", "- awareness (+2)"])
     end
   end
+
+  describe "manual modifier" do
+    it "adds a positive manual modifier on top of the stat modifiers" do
+      roll_result.manual_modifier = 3
+      expect(roll_result.modified_roll_result).to eq(9)
+    end
+
+    it "subtracts a negative manual modifier" do
+      roll_result.manual_modifier = -2
+      expect(roll_result.modified_roll_result).to eq(4)
+    end
+
+    it "lists the manual modifier in the breakdown" do
+      roll_result.manual_modifier = 3
+      expect(roll_result.modifier_descriptions).to eq(["+ manual (+3)"])
+    end
+
+    it "omits a zero manual modifier from the breakdown" do
+      roll_result.manual_modifier = 0
+      expect(roll_result.modifier_descriptions).to eq([])
+    end
+
+    it "snapshots the manual modifier alongside the stat modifiers" do
+      roll_result.manual_modifier = 3
+      roll_result.save!
+      roll_result.update!(manual_modifier: 0)
+      expect(roll_result.reload.modified_roll_result).to eq(9)
+    end
+  end
 end

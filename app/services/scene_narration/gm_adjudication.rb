@@ -32,7 +32,7 @@ module SceneNarration
       resolved = resolve_table(table)
       return nil if resolved.nil?
 
-      { table: resolved, defender: defender_for(table, resolved) }
+      { table: resolved, defender: defender_for(table, resolved), manual_modifier: table["manual_modifier"].to_i }
     end
 
     def defender_for(table, resolved)
@@ -117,7 +117,8 @@ module SceneNarration
         table = roll[:table]
         ensure_present(roll[:defender])
         @event.roll_results.create!(roll_table: table, roll_result: table.roll,
-                                    scene: @scene, character: @scene.character, defender: roll[:defender],)
+                                    scene: @scene, character: @scene.character, defender: roll[:defender],
+                                    manual_modifier: roll[:manual_modifier],)
       end
     end
 
