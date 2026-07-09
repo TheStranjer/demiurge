@@ -4,6 +4,7 @@ class Event < ApplicationRecord
   STATUSES = %w[pending declaring awaiting_gm rolled narrating validating complete failed].freeze
 
   belongs_to :scene
+  belongs_to :suggested_defender, class_name: "Character", optional: true
   has_many :roll_results, as: :entity, dependent: :destroy
   has_many :grok_calls, as: :grokable, dependent: :destroy
   has_many :proposed_roll_tables, -> { where(suggestion: true) }, class_name: "RollTable",

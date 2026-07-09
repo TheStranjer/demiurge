@@ -25,7 +25,8 @@ module SceneNarration
       intent = arguments["intent"].to_s
       suggested_ids = Array(arguments["suggested_roll_table_ids"]).map(&:to_i) & library_ids
       created = create_suggestions(Array(arguments["new_tables"]), suggested_ids)
-      event.update!(intent: intent, suggested_roll_table_ids: suggested_ids.uniq)
+      event.update!(intent: intent, suggested_roll_table_ids: suggested_ids.uniq,
+                    suggested_defender_id: suggested_defender_id(arguments["defender_name"]),)
       Result.new(signal: :intent,
                  content: { intent: intent, suggested_roll_table_ids: suggested_ids.uniq,
                             new_table_ids: created.map(&:id), }.to_json,)
@@ -69,6 +70,14 @@ module SceneNarration
 
     def library_ids
       scene.world.roll_tables.library.pluck(:id)
+    end
+
+    def suggested_defender_id(name)
+      return nil if name.blank?
+
+      normalized = name.to_s.strip.downcase
+      scene.present_characters
+           .find { |character| character.id != scene.character_id && character.name.downcase == normalized }&.id
     end
   end
 end

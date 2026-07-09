@@ -79,6 +79,20 @@ RSpec.describe SceneNarration::IntentDeclarer do
     end
   end
 
+  context "when the model names a defender for a contested attempt" do
+    before do
+      scene.scene_presences.create!(character: world.characters.create!(character_attributes(name: "Rook")))
+      declaration = message([tool_call("c1", "declare_intent",
+                                       { intent: "Kara grapples Rook.", defender_name: "rook" })])
+      stub_grok(declaration, validation_message(follows: true))
+    end
+
+    it "resolves the name to the present character and stores it as the suggested defender" do
+      declare
+      expect(event.reload.suggested_defender_id).to eq(world.characters.find_by(name: "Rook").id)
+    end
+  end
+
   context "when a proposed table duplicates an existing library table" do
     before do
       stub_grok(declare_message(new_tables: [new_table_definition.merge(description: "  EXISTING   strike table ")]),

@@ -1,0 +1,5 @@
+- defenders = @scene.world.characters.where.not(id: @scene.character_id).order(:name)
+- selected = local_assigns.fetch(:selected, @scene.awaiting_gm_event&.suggested_defender_id)
+.form-field.table-defender
+  = label_tag "tables[#{index}][defender_id]", "Defender (for contested rolls)"
+  = select_tag "tables[#{index}][defender_id]", options_from_collection_for_select(defenders, :id, :name, selected), include_blank: true

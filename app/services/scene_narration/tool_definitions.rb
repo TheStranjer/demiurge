@@ -47,6 +47,10 @@ module SceneNarration
                       "table that already exists — reuse it through suggested_roll_table_ids instead. New tables " \
                       "must be reusable, not tied to one character or moment."
 
+    DEFENDER_HINT = "When the attempt is contested (another character resists), name the character most likely to " \
+                    "resist it so the Game Master can default the defender for those rolls. Leave empty for wholly " \
+                    "uncontested attempts."
+
     def initialize(scene, event = nil)
       @scene = scene
       @event = event
@@ -87,15 +91,22 @@ module SceneNarration
     def intent_properties
       ids = library_table_ids
       item = ids.any? ? { type: "integer", enum: ids } : { type: "integer" }
-      {
+      properties = {
         intent: { type: "string" },
         suggested_roll_table_ids: { type: "array", items: item, description: SUGGESTED_IDS_HINT },
         new_tables: { type: "array", items: NEW_TABLE, description: NEW_TABLES_HINT },
       }
+      names = defender_names
+      properties[:defender_name] = { type: "string", enum: names, description: DEFENDER_HINT } if names.any?
+      properties
     end
 
     def library_table_ids
       scene.world.roll_tables.library.order(:id).pluck(:id)
+    end
+
+    def defender_names
+      scene.present_characters.reject { |character| character.id == scene.character_id }.map(&:name)
     end
 
     def prose_tool

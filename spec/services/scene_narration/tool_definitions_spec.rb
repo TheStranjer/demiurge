@@ -78,4 +78,16 @@ RSpec.describe SceneNarration::ToolDefinitions do
     expect(new_table_schema.dig(:properties, :entity_modifiers, :items, :enum)).to eq(stats)
     expect(new_table_schema.dig(:properties, :defender_modifiers, :items, :enum)).to eq(stats)
   end
+
+  it "lets the model suggest a defender from the other present characters" do
+    rival = world.characters.create!(character_attributes(name: "Rival"))
+    scene.scene_presences.create!(character: rival)
+    schema = definitions.intent_tools.first.dig(:function, :parameters, :properties, :defender_name)
+    expect(schema[:enum]).to eq(["Rival"])
+  end
+
+  it "omits the defender suggestion when the actor is alone in the scene" do
+    properties = definitions.intent_tools.first.dig(:function, :parameters, :properties)
+    expect(properties).not_to have_key(:defender_name)
+  end
 end

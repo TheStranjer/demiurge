@@ -3,7 +3,6 @@
 - rows = (table&.possible_results.presence || [{ "min" => nil, "max" => nil, "result" => "" }])
 - entity_mods = Array(table&.entity_modifiers)
 - defender_mods = Array(table&.defender_modifiers)
-- defenders = @scene.world.characters.where.not(id: @scene.character_id).order(:name)
 .table-block{ data: { row_next: rows.size } }
   .table-block-head
     = check_box_tag "tables[#{index}][include]", "1", checked, class: "table-block-include", id: "table_block_include_#{index}"
@@ -38,9 +37,7 @@
         %label.table-modifier
           = check_box_tag "tables[#{index}][defender_modifiers][]", stat, defender_mods.include?(stat.to_s), id: "table_#{index}_defender_#{stat}"
           = stat
-    .form-field.table-defender
-      = label_tag "tables[#{index}][defender_id]", "Defender (for contested rolls)"
-      = select_tag "tables[#{index}][defender_id]", options_from_collection_for_select(defenders, :id, :name), include_blank: true
+    = render "scenes/defender_field", index: index
   %table.roll-table
     %thead
       %tr
